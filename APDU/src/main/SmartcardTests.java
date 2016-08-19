@@ -876,7 +876,7 @@ public class SmartcardTests {
 	
 	public static void minutiate_binaryToHex (){
 		
-	     File file = new File("X:/Clientes/AGESIC/APDU/huella_03CR_64Mins.istcc");
+	     File file = new File("");
 
 		 FileInputStream fileInputStream = null;
 		 
