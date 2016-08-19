@@ -533,7 +533,7 @@ public class SmartcardTests {
 		// mse-set, en el documento de IAS esta al reves la especificacion.
 		// Revisar bien los parámetros, el iso.
 
-		String dataIN = "840101800101"; // Select the key pair (RSA/ECC) and the
+		String dataIN = "840101800102"; // Select the key pair (RSA/ECC) and the
 										// signature ALGO
 
 		System.out.println("dataIN: " + dataIN);
@@ -774,7 +774,7 @@ public class SmartcardTests {
 			// certificado.
 			String certificateSize = subBytes(response, 4, 5);
 			int certSizeIntBytes = Integer.parseInt(certificateSize, 16);
-			int DF_int = Integer.parseInt("DF", 16);
+			int FF_int = Integer.parseInt("FF", 16);
 
 			int cantBytes = 0;
 
@@ -787,8 +787,8 @@ public class SmartcardTests {
 				// DF entonces me traigo DF.
 				// Sino me traigo los Bytes que me quedan.
 
-				if (cantBytes + DF_int <= certSizeIntBytes) {
-					dataOUTLength = DF_int;
+				if (cantBytes + FF_int <= certSizeIntBytes) {
+					dataOUTLength = FF_int;
 				} else {
 					dataOUTLength = certSizeIntBytes - cantBytes;
 				}
@@ -842,10 +842,7 @@ public class SmartcardTests {
 			// Fallo el select File antes del Read Binary
 			return false;
 		}
-		// El SW 6A80 indica error de codificacion, es decir, en los TLV
-		// El SW 63Cx indica error de match y que quedan x intentos
-		// 9000 es SW de exito
-
+		
 		// Si llego aca retorno true, ya hizo todos los readBinary
 		return true;
 	}
@@ -867,13 +864,13 @@ public class SmartcardTests {
 		PublicKey pubKeyeID = certificado_eID.getPublicKey();
 
 		
-		//
-		Signature signer = Signature.getInstance("SHA256withRSA");		 
-		signer.initVerify(pubKeyeID);
-	    signer.update(hexStringToByteArray(HASH));
-	    boolean valid = signer.verify(hexStringToByteArray(HASH_Signature));	
-	    return valid;
-
+		Cipher decrypt=Cipher.getInstance("RSA/ECB/PKCS1Padding");
+		decrypt.init(Cipher.DECRYPT_MODE, pubKeyeID);
+		String decryptedMessage = byteArrayToHex(decrypt.doFinal(hexStringToByteArray(HASH_Signature)));		
+		
+		System.out.println(decryptedMessage);
+		
+		return decryptedMessage.equals(HASH);
 	}
 	
 	
