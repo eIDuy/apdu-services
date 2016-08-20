@@ -786,8 +786,7 @@ public class SmartcardTests {
 
 				// Calculo el LE
 				// Si la cantidad de Bytes que me quedan por obtener es mayor a
-				// FF entonces me traigo FF.
-				// Sino me traigo los Bytes que me quedan.
+				// FF entonces me traigo FF. Sino me traigo los Bytes que me quedan.
 
 				if (cantBytes + FF_int <= certSizeIntBytes) {
 					dataOUTLength = FF_int;
