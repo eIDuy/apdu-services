@@ -58,7 +58,7 @@ public class SmartcardTests {
 
 	private static String HASH_Signature = "";
 	
-	private static String PIN_ASCII = ""; //1234
+	private static String PIN_ASCII = "";
 
 	/**
 	 * @param args
@@ -81,7 +81,7 @@ public class SmartcardTests {
 		List<CardTerminal> terminals = factory.terminals().list();
 		// System.out.println("Terminals: " + terminals);
 		// get the first terminal
-		CardTerminal terminal = terminals.get(1);
+		CardTerminal terminal = terminals.get(0);
 		// establish a connection with the card
 		Card card = terminal.connect("T=0");
 		// System.out.println("card ATR: " +
@@ -875,7 +875,7 @@ public class SmartcardTests {
 
 		//1) Verify the card certificate signature (signed by the C.A.)
 		certificado_eID.checkValidity();
-		//Esta dando signature does not match, probar con otra cedula o una verdadera.
+		//Esta dando signature does not match
 		//certificado_eID.verify(pubKeyMiCA);
 			
 		//2) Extract the card public RSA key from the card certificate
@@ -929,6 +929,7 @@ public class SmartcardTests {
 			PIN_ASCII = PIN_ASCII.concat(hex);			
 		}
 		
+		//Agrego padding para completar los 12 bytes con 00 (sino no funciona)
 		int padding = (24-PIN_ASCII.length())/2;
 		
 		for (int j=0;j <padding;j++){			
