@@ -22,6 +22,7 @@ import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Base64;
 import java.util.List;
 
 import javax.crypto.BadPaddingException;
@@ -36,8 +37,6 @@ import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 import javax.smartcardio.TerminalFactory;
 
-import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
-import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 /**
  *
@@ -82,7 +81,7 @@ public class SmartcardTests {
 	 * @throws NoSuchProviderException 
 	 */
 	public static void main(String[] args) throws CardException, IOException,
-			CertificateException, Base64DecodingException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException {
+			CertificateException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException {
 		// TODO code application logic here
 		// show the list of available terminals
 		TerminalFactory factory = TerminalFactory.getDefault();
@@ -849,7 +848,7 @@ public class SmartcardTests {
 		return true;
 	}
 
-	public static boolean validateHashSignature() throws CertificateException,Base64DecodingException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException {
+	public static boolean validateHashSignature() throws CertificateException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException {
 
 		
 		
@@ -863,7 +862,7 @@ public class SmartcardTests {
 		//parseo la representacion B64 del certificado de la MiCA a un objeto x509 
 		
 		CertificateFactory cf = CertificateFactory.getInstance("X.509");
-		InputStream certificado_b64_MiCA = new ByteArrayInputStream(Base64.decode(MiCA));
+		InputStream certificado_b64_MiCA = new ByteArrayInputStream(Base64.getDecoder().decode(MiCA));
 		X509Certificate certificado_MiCA = (X509Certificate) cf.generateCertificate(certificado_b64_MiCA);
 		PublicKey pubKeyMiCA = certificado_MiCA.getPublicKey();
 
@@ -875,7 +874,7 @@ public class SmartcardTests {
 
 		//1) Verify the card certificate signature (signed by the C.A.)
 		certificado_eID.checkValidity();
-		//Esta dando signature does not match.
+		//Esta dando signature does not match, probar con otra cedula o una verdadera.
 		//certificado_eID.verify(pubKeyMiCA);
 			
 		//2) Extract the card public RSA key from the card certificate
