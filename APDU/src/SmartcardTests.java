@@ -1,10 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-package main;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -12,12 +5,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PublicKey;
-import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -66,6 +57,8 @@ public class SmartcardTests {
 	private static String HASH = "4D7CCCBD17064A12DD43021668679F7B488AFD55AAB1502E0CA8A55F5A8E2C0B";
 
 	private static String HASH_Signature = "";
+	
+	private static String PIN_ASCII = ""; //1234
 
 	/**
 	 * @param args
@@ -130,6 +123,11 @@ public class SmartcardTests {
 					System.out.println("IAS Select ERROR\n\n");
 				}
 
+				//Ingresa el pin y lo transformo a ASCII
+				System.out.println("Ingrese el pin");
+				String pin = br.readLine();
+				inputPin(pin);			
+				
 				if (verifyPIN(channel)) {
 					System.out.println("PIN Exitoso\n\n");
 				} else {
@@ -443,8 +441,11 @@ public class SmartcardTests {
 		String INSTRUCTION = "20";
 		String PARAM1 = "00";
 		String PARAM2 = "11";
+		
+		
+		
 
-		String dataIN = "313233340000000000000000"; // 1234
+		String dataIN = PIN_ASCII; // 1234
 
 		// Aparentemente el Reference PIN es de 12 bytes de largo,
 		// por lo que el DATA tiene que ser siempre de 12 bytes.
@@ -918,6 +919,24 @@ public class SmartcardTests {
 	    	  e.printStackTrace();
 	     }
 
+	}
+	
+	public static void inputPin(String pin){
+		
+		for (int i=0;i<pin.length();i++){
+			char c = pin.charAt(i);
+			String hex = Integer.toHexString((int)c);
+			PIN_ASCII = PIN_ASCII.concat(hex);			
+		}
+		
+		int padding = (24-PIN_ASCII.length())/2;
+		
+		for (int j=0;j <padding;j++){			
+			PIN_ASCII = PIN_ASCII.concat("00");					
+		}
+		
+		System.out.println("PIN: "+PIN_ASCII);
+		
 	}
 	
 }
