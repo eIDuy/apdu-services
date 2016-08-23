@@ -1,3 +1,4 @@
+import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -13,7 +14,7 @@ import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.Base64;
+import com.sun.org.apache.xml.internal.security.utils.Base64;
 import java.util.List;
 
 import javax.crypto.BadPaddingException;
@@ -75,7 +76,7 @@ public class SmartcardTests {
 	 * @throws NoSuchProviderException 
 	 */
 	public static void main(String[] args) throws CardException, IOException,
-			CertificateException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException {
+			CertificateException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException, Base64DecodingException {
 		// TODO code application logic here
 		// show the list of available terminals
 		TerminalFactory factory = TerminalFactory.getDefault();
@@ -135,7 +136,7 @@ public class SmartcardTests {
 					System.out.println("PIN fallido\n\n");
 				}
 
-				if (selectEFCertificate(channel)) {
+				if (selectFile(channel, "B001")) {
 					System.out.println("Lectura del certificado exitoso\n\n");
 				} else {
 					System.out.println("Lectura del certificado Fallo\n\n");
@@ -697,10 +698,21 @@ public class SmartcardTests {
 	public static void printCommand(String command) {
 
 	}
+        
+        public static UserId getUserId(CardChannel channel) {
+            //FCITemplate fcit = selectFile(channel, "7001");
+            
+        }
+        
 
-	public static boolean selectEFCertificate(CardChannel channel)
+        //POR AHORA ESTA SOPORTA SOLO LECTURA DE EF
+        //CAPAZ SOPORTA DF TAMBIEN, PERO NO FUE HECHA PARA ESO
+	public static boolean selectFile(CardChannel channel, String fileID)
 			throws CardException {
 
+                //Los comentarios estan asi porque antes se leia el certificado nada mas
+                
+                
 		// Siempre se va quedando con el maximo que puede DF (233) a partir de
 		// la direccion 00 00 va suamndo DF hasta llegar a 053A donde espera una
 		// respuesta de A2 en lugar de DF
@@ -732,7 +744,7 @@ public class SmartcardTests {
 		String PARAM1 = "00";
 		String PARAM2 = "00";
 
-		String dataIN = "B001";
+		String dataIN = fileID;
 
 		System.out.println("dataIN: " + dataIN);
 
@@ -849,7 +861,7 @@ public class SmartcardTests {
 		return true;
 	}
 
-	public static boolean validateHashSignature() throws CertificateException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException {
+	public static boolean validateHashSignature() throws CertificateException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException, Base64DecodingException {
 
 		
 		
@@ -863,7 +875,7 @@ public class SmartcardTests {
 		//parseo la representacion B64 del certificado de la MiCA a un objeto x509 
 		
 		CertificateFactory cf = CertificateFactory.getInstance("X.509");
-		InputStream certificado_b64_MiCA = new ByteArrayInputStream(Base64.getDecoder().decode(MiCA));
+		InputStream certificado_b64_MiCA = new ByteArrayInputStream(Base64.decode(MiCA));
 		X509Certificate certificado_MiCA = (X509Certificate) cf.generateCertificate(certificado_b64_MiCA);
 		PublicKey pubKeyMiCA = certificado_MiCA.getPublicKey();
 
@@ -939,5 +951,7 @@ public class SmartcardTests {
 		System.out.println("PIN: "+PIN_ASCII);
 		
 	}
+        
+        
 	
 }
