@@ -58,6 +58,7 @@ public class SmartcardTests {
     private static String HASH_Signature = "";
 
     private static String PIN_ASCII = "";
+    //Test 2
 
     /**
      * @param args the command line arguments
