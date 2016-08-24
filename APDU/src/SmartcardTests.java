@@ -1,5 +1,6 @@
 
 import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
+import com.sun.org.apache.xml.internal.security.utils.Base64;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -13,9 +14,7 @@ import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import com.sun.org.apache.xml.internal.security.utils.Base64;
 import java.util.List;
-
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -24,9 +23,10 @@ import javax.smartcardio.Card;
 import javax.smartcardio.CardChannel;
 import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
-import javax.smartcardio.CommandAPDU;
 import javax.smartcardio.ResponseAPDU;
 import javax.smartcardio.TerminalFactory;
+
+
 
 /**
  *
@@ -59,7 +59,6 @@ public class SmartcardTests {
 
     private static String PIN_ASCII = "";
 
-
     /**
      * @param args the command line arguments
      * @throws javax.smartcardio.CardException
@@ -75,7 +74,7 @@ public class SmartcardTests {
      * @throws NoSuchProviderException
      */
     public static void main(String[] args) throws CardException, IOException,
-            CertificateException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException, Base64DecodingException {
+            CertificateException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException, Base64DecodingException{
         // TODO code application logic here
         // show the list of available terminals
         TerminalFactory factory = TerminalFactory.getDefault();
@@ -135,13 +134,11 @@ public class SmartcardTests {
                         System.out.println("PIN fallido\n\n");
                     }
 
-                    if (selectFile(channel, "B001")) {
+                    if (readCertificate(channel)) {
                         System.out.println("Lectura del certificado exitoso\n\n");
                     } else {
                         System.out.println("Lectura del certificado Fallo\n\n");
                     }
-
-                    System.out.println(certificate_HEX_DER_encoded + "\n\n");
 
                     if (MSE_SET_DST(channel)) {
                         System.out.println("SET DST\n\n");
@@ -232,25 +229,12 @@ public class SmartcardTests {
 
         String dataIN = "";
 
-        // ESTO DEBE SER EL APP ID de la IAS
-        // REVISAR LA DOCUMENTACION DE GEMALTO PARA CONFIRMARLO
-        int dataINLength = dataIN.length() / 2;
-        int dataOUTLength = 0;
-
-        String commandString = CLASS + INSTRUCTION + PARAM1 + PARAM2;
-        if (dataINLength > 0) {
-            commandString += Utils.byteArrayToHex(Utils.intToByteArray(dataINLength)) + dataIN;
-        }
-        if (dataOUTLength > 0) {
-            commandString += Utils.byteArrayToHex(Utils.intToByteArray(dataOUTLength));
-        }
-        if (dataINLength == 0 && dataOUTLength == 0) {
-            // OBSERVACION el LC o LE siempre tiene que ir, aunque sea en 0
-            commandString += "00";
-        }
-        System.out.println("Command: " + commandString);
-        ResponseAPDU r = channel.transmit(new CommandAPDU(Utils.hexStringToByteArray(commandString)));
-        String response = Utils.byteArrayToHex(r.getBytes());
+        byte CLASSbyte = Utils.hexStringToByteArray(CLASS)[0];
+        byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
+        byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
+        byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
+        return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
 
         // TODO si se codifica esta operacion, se puede armar una clase que
         // parsee las cosas y luego permita imprimir o tomar los datos en forma
@@ -289,8 +273,6 @@ public class SmartcardTests {
         // 39, 40));
         // System.out.println("IC Personalization Equipment Identifier: " +
         // subBytes(response, 41, 44));
-        System.out.println("response: " + Utils.byteArrayToHex(r.getBytes()));
-        return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
     }
 
     // Retorna true si pudo seleccionar la aplicacion IAS
@@ -305,28 +287,11 @@ public class SmartcardTests {
 
         // ESTO DEBE SER EL APP ID de la IAS
         // REVISAR LA DOCUMENTACION DE GEMALTO PARA CONFIRMARLO
-        int dataINLength = dataIN.length() / 2; // calculo de bytes del Data
-        // Field
-        int dataOUTLength = 0;
-
-        String commandString = CLASS + INSTRUCTION + PARAM1 + PARAM2;
-        
-        if (dataINLength > 0) {
-            commandString += Utils.byteArrayToHex(Utils.intToByteArray(dataINLength)) + dataIN;
-        }
-
-        if (dataOUTLength > 0) {
-            commandString += Utils.byteArrayToHex(Utils.intToByteArray(dataOUTLength));
-            
-        }
-        if (dataINLength == 0 && dataOUTLength == 0) {
-            // OBSERVACION el LC o LE siempre tiene que ir, aunque sea en 0
-            commandString += "00";
-        }
-
-        ResponseAPDU r = channel.transmit(new CommandAPDU(Utils.hexStringToByteArray(commandString)));
-        System.out.println("command: " + commandString);
-        System.out.println("response: " + Utils.byteArrayToHex(r.getBytes()));
+        byte CLASSbyte = Utils.hexStringToByteArray(CLASS)[0];
+        byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
+        byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
+        byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
         return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
     }
 
@@ -362,18 +327,12 @@ public class SmartcardTests {
                 + Utils.byteArrayToHex(Utils.intToByteArray(pulgarDer_3CR_2.length() / 2));
         dataIN += pulgarDer_3CR_2;
 
-        System.out.println("dataIN: " + dataIN);
-
-        int dataINLength = dataIN.length() / 2;
-        // System.out.println("length dataIN: " + dataINLength);
-
-        int dataOUTLength = 0;
-
         byte CLASSbyte = Utils.hexStringToByteArray(CLASS)[0];
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
-        return Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
+        return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
 
         // El SW 6A80 indica error de codificacion, es decir, en los TLV
         // El SW 63Cx indica error de match y que quedan x intentos
@@ -392,18 +351,12 @@ public class SmartcardTests {
         // se pone con padding de ceros para completar 12.
         // Los caracteres van codificados en ascii, hay que ver si se hace
         // enforcement de eso
-        System.out.println("dataIN: " + dataIN);
-
-        int dataINLength = dataIN.length() / 2;
-        // System.out.println("length dataIN: " + dataINLength);
-
-        int dataOUTLength = 0;
-
         byte CLASSbyte = Utils.hexStringToByteArray(CLASS)[0];
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
-        return Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
+        return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
 
         // El SW 6A80 indica error de codificacion, es decir, en los TLV
         // El SW 63Cx indica error de match y que quedan x intentos
@@ -419,18 +372,12 @@ public class SmartcardTests {
         String dataIN = "";
         // el buffer vacio y el LC 0 indica que se pregunta si esta verificado
 
-        System.out.println("dataIN: " + dataIN);
-
-        int dataINLength = dataIN.length() / 2;
-        // System.out.println("length dataIN: " + dataINLength);
-
-        int dataOUTLength = 0;
-
         byte CLASSbyte = Utils.hexStringToByteArray(CLASS)[0];
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
-        return Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
+        return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
 
         // El SW 6A80 indica error de codificacion, es decir, en los TLV
         // El SW 63Cx indica error de match y que quedan x intentos
@@ -446,18 +393,12 @@ public class SmartcardTests {
         // el buffer vacio, el modo FF y el LC 0 indica que se quiere
         // "desverificar"
 
-        System.out.println("dataIN: " + dataIN);
-
-        int dataINLength = dataIN.length() / 2;
-        // System.out.println("length dataIN: " + dataINLength);
-
-        int dataOUTLength = 0;
-
         byte CLASSbyte = Utils.hexStringToByteArray(CLASS)[0];
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
-        return Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
+        return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
 
         // El SW 6A80 indica error de codificacion, es decir, en los TLV
         // El SW 63Cx indica error de match y que quedan x intentos
@@ -476,18 +417,12 @@ public class SmartcardTests {
         String dataIN = "840101800102"; // Select the key pair (RSA/ECC) and the
         // signature ALGO
 
-        System.out.println("dataIN: " + dataIN);
-
-        int dataINLength = dataIN.length() / 2;
-        // System.out.println("length dataIN: " + dataINLength);
-
-        int dataOUTLength = 0;
-
         byte CLASSbyte = Utils.hexStringToByteArray(CLASS)[0];
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
-        return Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
+        return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
 
         // El SW 6A80 indica error de codificacion, es decir, en los TLV
         // El SW 63Cx indica error de match y que quedan x intentos
@@ -510,18 +445,12 @@ public class SmartcardTests {
         dataIN += length;
         dataIN += hash_external;
 
-        System.out.println("dataIN: " + dataIN);
-
-        int dataINLength = dataIN.length() / 2;
-        // System.out.println("length dataIN: " + dataINLength);
-
-        int dataOUTLength = 0;
-
         byte CLASSbyte = Utils.hexStringToByteArray(CLASS)[0];
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
-        return Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
+        return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
 
         // El SW 6A80 indica error de codificacion, es decir, en los TLV
         // El SW 63Cx indica error de match y que quedan x intentos
@@ -538,30 +467,11 @@ public class SmartcardTests {
 
         String dataIN = "";
 
-        System.out.println("dataIN: " + dataIN);
-
-        int dataINLength = dataIN.length() / 2;
-        // System.out.println("length dataIN: " + dataINLength);
-
-        int dataOUTLength = 0;
-
-        String commandString = CLASS + INSTRUCTION + PARAM1 + PARAM2;
-        if (dataINLength > 0) {
-            commandString += Utils.byteArrayToHex(Utils.intToByteArray(dataINLength))
-                    + dataIN;
-        }
-        if (dataOUTLength > 0) {
-            commandString += Utils.byteArrayToHex(Utils.intToByteArray(dataOUTLength));
-        }
-        if (dataINLength == 0 && dataOUTLength == 0) {
-            // OBSERVACION el LC o LE siempre tiene que ir, aunque sea en 0
-            commandString += "00";
-        }
-
-        ResponseAPDU r = channel.transmit(new CommandAPDU(
-                Utils.hexStringToByteArray(commandString)));
-        System.out.println("command: " + commandString);
-        System.out.println("response: " + Utils.byteArrayToHex(r.getBytes()));
+        byte CLASSbyte = Utils.hexStringToByteArray(CLASS)[0];
+        byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
+        byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
+        byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
 
         HASH_Signature = Utils.byteArrayToHex(r.getData());
 
@@ -578,34 +488,18 @@ public class SmartcardTests {
         return null;
     }
 
+    public static boolean readCertificate(CardChannel channel) throws CardException {
+
+        FCITemplate fcit = selectFile(channel, "B001");
+        certificate_HEX_DER_encoded = readBinary(channel, fcit.getFileId(), fcit.getFileSize());
+        
+        return true;
+    }
+
     //POR AHORA ESTA SOPORTA SOLO LECTURA DE EF
     //CAPAZ SOPORTA DF TAMBIEN, PERO NO FUE HECHA PARA ESO
-    public static boolean selectFile(CardChannel channel, String fileID)
-            throws CardException {
+    public static FCITemplate selectFile(CardChannel channel, String fileID) throws CardException {
 
-        //Los comentarios estan asi porque antes se leia el certificado nada mas
-        // Siempre se va quedando con el maximo que puede DF (233) a partir de
-        // la direccion 00 00 va suamndo FF hasta llegar a 053A donde espera una
-        // respuesta de A2 en lugar de FF
-        // select File 00A4000002B00100 //Pagina 171 del documento IAS ,
-        // haciendo este select devuelve un fci template donde indica el largo
-        // del certificado para saber cuantos select posteriores hacer
-        // El largo esta especificado en los offset 4–5 del FCI for EFs
-        // retorando por el select
-        // TODO, ver de donde sale el select al offset B001 en caso de que haya
-        // mas certificados, capaz lo obtiene en select anteriores
-
-        /*
-		 * {"commands":[{"type":"CommandAPDU","apdu":"00B00000DF","swPattern":"9000"
-		 * } ,{"type":"CommandAPDU","apdu":"00B000DFDF","swPattern":"9000"},
-		 * {"type":"CommandAPDU","apdu":"00B001BEDF","swPattern":"9000"},
-		 * {"type":"CommandAPDU","apdu":"00B0029DDF","swPattern":"9000"},
-		 * {"type":"CommandAPDU","apdu":"00B0037CDF","swPattern":"9000"},
-		 * {"type":"CommandAPDU","apdu":"00B0045BDF","swPattern":"9000"},
-		 * {"type":"CommandAPDU","apdu":"00B0053AA2","swPattern":"9000"}]
-         */
-        // Construyo el select inicial B001 es la direccion a leer para obtener
-        // el fci template del certificado
         String CLASS = "00";
         String INSTRUCTION = "A4";
         String PARAM1 = "00";
@@ -613,120 +507,91 @@ public class SmartcardTests {
 
         String dataIN = fileID;
 
-        System.out.println("dataIN: " + dataIN);
+        byte CLASSbyte = Utils.hexStringToByteArray(CLASS)[0];
+        byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
+        byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
+        byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
 
-        int dataINLength = dataIN.length() / 2;
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
 
-        int dataOUTLength = 0;
-
-        String commandString = CLASS + INSTRUCTION + PARAM1 + PARAM2;
-        if (dataINLength > 0) {
-            commandString += Utils.byteArrayToHex(Utils.intToByteArray(dataINLength)) + dataIN;
-        }
-        if (dataOUTLength > 0) {
-            commandString += Utils.byteArrayToHex(Utils.intToByteArray(dataOUTLength));
-        }
-        if (dataINLength == 0 && dataOUTLength == 0) {
-            // OBSERVACION el LC o LE siempre tiene que ir, aunque sea en 0
-            commandString += "00";
-        }
-
-        ResponseAPDU r = channel.transmit(new CommandAPDU(Utils.hexStringToByteArray(commandString)));
-        System.out.println("command: " + commandString);
-        System.out.println("response: " + Utils.byteArrayToHex(r.getBytes()));
-
-        // Si la lectura del archivo es exitosa debo interpretar el fci template
-        // de la respuesta para saber el largo del certificado a leer
+        // Si la lectura del archivo es exitosa debo construir el fci template
         if (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00) {
 
-            System.out.println("Select File Exitoso\n\n");
-            String response = Utils.byteArrayToHex(r.getBytes());
+            FCITemplate fcit = new FCITemplate();
+            fcit.buildFromBuffer(r.getData(), 0, r.getData().length);
 
-            // Construyo el Read Binary, lo que cambia en cada read son P1 y P2
-            // porque van variando los offset para ir leyendo el certificado
-            CLASS = "00";
-            INSTRUCTION = "B0";
-            dataIN = "";
-
-            dataINLength = dataIN.length() / 2;
-
-            // La cantidad de REad binary a realizar es en base al Value of File
-            // Size del fci for EFs obtenido como respuesta del select anterior.
-            // En los offset 4 y 5 del fci se encuentra el tamaño del
-            // certificado.
-            String certificateSize = Utils.subBytes(response, 4, 5);
-            int certSizeIntBytes = Integer.parseInt(certificateSize, 16);
-            int FF_int = Integer.parseInt("FF", 16);
-
-            int cantBytes = 0;
-
-            String PARAM1_PARAM2 = "";
-
-            while (cantBytes < certSizeIntBytes) {
-
-                // Calculo el LE
-                // Si la cantidad de Bytes que me quedan por obtener es mayor a
-                // FF entonces me traigo FF. Sino me traigo los Bytes que me quedan.
-                if (cantBytes + FF_int <= certSizeIntBytes) {
-                    dataOUTLength = FF_int;
-                } else {
-                    dataOUTLength = certSizeIntBytes - cantBytes;
-                }
-
-                // Param1 y param2 comienzan en 00 00, voy incrementando DF
-                // bytes hasta leer el total del certificado.
-                // Si el offset es menor a FF debo agregar 00 en P1
-                if (cantBytes <= 255) {
-                    PARAM1_PARAM2 = "00" + Utils.byteArrayToHex(Utils.intToByteArray(cantBytes));
-                } else {
-                    PARAM1_PARAM2 = Utils.byteArrayToHex(Utils.intToByteArray(cantBytes));
-                }
-
-                // Envio el Select
-                commandString = CLASS + INSTRUCTION + PARAM1_PARAM2;
-
-                if (dataINLength > 0) {
-                    commandString += Utils.byteArrayToHex(Utils.intToByteArray(dataINLength)) + dataIN;
-                }
-                if (dataOUTLength > 0) {
-                    commandString += Utils.byteArrayToHex(Utils.intToByteArray(dataOUTLength));
-                }
-                if (dataINLength == 0 && dataOUTLength == 0) {
-                    // OBSERVACION el LC o LE siempre tiene que ir, aunque sea
-                    // en 0
-                    commandString += "00";
-                }
-
-                r = channel.transmit(new CommandAPDU(Utils.hexStringToByteArray(commandString)));
-                System.out.println("command: " + commandString);
-                System.out.println("response: " + Utils.byteArrayToHex(r.getBytes()));
-
-                // El certificado esta en ASCII
-                certificate_HEX_DER_encoded += Utils.byteArrayToHex(r.getData());
-
-                if (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00) {
-
-                    cantBytes += dataOUTLength;
-
-                } else {
-
-                    // Fallo algun read binary
-                    return false;
-                }
-
-            }
-
-        } else {
-
-            // Fallo el select File antes del Read Binary
-            return false;
-        }
-
-        // Si llego aca retorno true, ya hizo todos los readBinary
-        return true;
+            return fcit;
+            
+        }else {
+            
+            return null;
+        }    
+        
     }
 
-    public static boolean validateHashSignature() throws CertificateException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException, Base64DecodingException {
+        public static String readBinary(CardChannel channel, int fileID, int fileSize) throws CardException {
+
+        // Construyo el Read Binary, lo que cambia en cada read son P1 y P2
+        // porque van variando los offset para ir leyendo el binario hasta llegar al tamaño total
+        // en cada read leo FF
+        String CLASS = "00";
+        String INSTRUCTION = "B0";
+        String dataIN = "";
+        String PARAM1 = "";
+        String PARAM2 = "";
+ 
+        int FF_int = Integer.parseInt("FF", 16);
+
+        int cantBytes = 0;
+        int dataOUTLength = 0; //le
+        
+        String binaryHexString = "";
+
+        while (cantBytes < fileSize) {
+
+            // Calculo el LE
+            // Si la cantidad de Bytes que me quedan por obtener es mayor a
+            // FF entonces me traigo FF. Sino me traigo los Bytes que me quedan.
+            if (cantBytes + FF_int <= fileSize) {
+                dataOUTLength = FF_int;
+            } else {
+                dataOUTLength = fileSize - cantBytes;
+            }
+
+            // Param1 y param2 comienzan en 00 00, voy incrementando DF
+            // bytes hasta leer el total del certificado.
+            // Si el offset es menor a FF debo agregar 00 en P1
+            if (cantBytes <= 255) {
+                PARAM1 = "00" + Utils.byteArrayToHex(Utils.intToByteArray(cantBytes));
+            } else { 
+                String PARAM1_PARAM2 = Utils.byteArrayToHex(Utils.intToByteArray(cantBytes));
+                PARAM1 = PARAM1_PARAM2.substring(0,1);
+                PARAM2 = PARAM1_PARAM2.substring(2,3);
+            }
+        
+        byte CLASSbyte = Utils.hexStringToByteArray(CLASS)[0];
+        byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
+        byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
+        byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
+
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN));
+
+        binaryHexString += Utils.byteArrayToHex(r.getData());
+
+            if (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00) {
+
+                cantBytes += dataOUTLength;
+
+            } else {
+                // Fallo algun read binary
+                return "";
+            }
+
+        }        
+        return binaryHexString;
+    }
+
+    public static boolean validateHashSignature() throws CertificateException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException, Base64DecodingException{
 
         //The terminal can now perform:
         //1) Verify the card certificate signature (signed by the C.A.)

@@ -11,7 +11,8 @@ import java.util.Date;
  *
  * @author gdotta
  */
-class UserId {
+public class UserId {
+    
     private String docNumber;
     private String firstName;
     private String lastName1;

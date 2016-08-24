@@ -9,7 +9,7 @@
  *
  * @author gdotta
  */
-class FCITemplate {
+public class FCITemplate {
     //TODO solve the EF DF distinction with inheritance
     private boolean isDF;
     private boolean isEF;
@@ -18,6 +18,63 @@ class FCITemplate {
     private byte fdb; //only for EF
     private int fileId; 
     private byte lifeCycleStatusByte; //only for EF
+
+    public boolean isIsDF() {
+        return isDF;
+    }
+
+    public void setIsDF(boolean isDF) {
+        this.isDF = isDF;
+    }
+
+    public boolean isIsEF() {
+        return isEF;
+    }
+
+    public void setIsEF(boolean isEF) {
+        this.isEF = isEF;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public int getFileSize() {
+        return fileSize;
+    }
+
+    public void setFileSize(int fileSize) {
+        this.fileSize = fileSize;
+    }
+
+    public byte getFdb() {
+        return fdb;
+    }
+
+    public void setFdb(byte fdb) {
+        this.fdb = fdb;
+    }
+
+    public int getFileId() {
+        return fileId;
+    }
+
+    public void setFileId(int fileId) {
+        this.fileId = fileId;
+    }
+
+    public byte getLifeCycleStatusByte() {
+        return lifeCycleStatusByte;
+    }
+
+    public void setLifeCycleStatusByte(byte lifeCycleStatusByte) {
+        this.lifeCycleStatusByte = lifeCycleStatusByte;
+    }
+  
 
     public FCITemplate() {
     }

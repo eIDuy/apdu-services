@@ -70,13 +70,14 @@ public class Utils {
         return data;
     }
 
-    public static boolean sendCommand(CardChannel chan, byte CLASS, byte INS,
+    public static ResponseAPDU sendCommand(CardChannel chan, byte CLASS, byte INS,
             byte P1, byte P2, byte[] data) throws CardException {
         int length = data.length; // largo de la data a mandar
         int i = 0;
         int iteraciones = 0;
         int SW1 = 0, SW2 = 0;
         byte[] command;
+        ResponseAPDU r = null;
         if (length == 0) {
             // mando el comando con LC 0
             command = new byte[5];
@@ -85,10 +86,9 @@ public class Utils {
             command[2] = P1;
             command[3] = P2;
             command[4] = (byte) 0x00;
-            ResponseAPDU r = chan.transmit(new CommandAPDU(command));
+            r = chan.transmit(new CommandAPDU(command));
             SW1 = r.getSW1();
             SW2 = r.getSW2();
-            System.out.println("Iteracion " + iteraciones);
             System.out.println("Comando: " + byteArrayToHex(command));
             System.out.println("Respuesta: " + byteArrayToHex(r.getBytes()));
         }
@@ -110,18 +110,16 @@ public class Utils {
             command[2] = P1;
             command[3] = P2;
 
-            ResponseAPDU r = chan.transmit(new CommandAPDU(command));
+            r = chan.transmit(new CommandAPDU(command));
             SW1 = r.getSW1();
             SW2 = r.getSW2();
-            System.out.println("Iteracion " + iteraciones);
             System.out.println("Comando: " + byteArrayToHex(command));
             System.out.println("Respuesta: " + byteArrayToHex(r.getBytes()));
 
             i += 0xFF;
 
         }
-
-        return (SW1 == (int) 0x90 && SW2 == (int) 0x00);
+        return r;
     }
 
     public static void printDataIN(String datain) {
