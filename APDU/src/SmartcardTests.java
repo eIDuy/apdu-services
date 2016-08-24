@@ -59,7 +59,6 @@ public class SmartcardTests {
 
     private static String PIN_ASCII = "";
 
-    private static String todosPutos;
 
     /**
      * @param args the command line arguments
