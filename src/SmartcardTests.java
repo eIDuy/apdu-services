@@ -41,7 +41,6 @@ public class SmartcardTests {
 
     private static final String pulgarDer_3CR_1 = "A3085C99087D860C9BA00E7B1E12434113605415602218634A184095197AB8199A731C9C6D1DBD071F4568265DC9305966337D7E339BAC395B263B65A73CBA393F62FC3F9672419DDD46995C485F69497D3C4B42455064B2505A5D547F65569E8B589B6A5D7C0D5F4AD867997B695B3E6A67266B69DF6CBA696D7CDC6F779F759BBA767969795D987ABB727D797D7D5AB47DB9557E66E27E97AE845A8D8C7C568EAA708F9D68916350924949946C709663B196598D9A77339A6D6F9C811B9EAE859FB784A475B3A6B6E2A6B76CAE7373AF95D8AF9942B2AF7AB2B228B650BDBA976EBC5330BD7038BE4F5BC3B61CC46EDCC65D64C85558C854";
     private static final String pulgarDer_3CR_2 = "A3085C860C9B1E12435415602218634A184095197AB8199A731C9C6D1DBD071F4568265DC930597E339BAC395B263B65393F62FC3F9672419DDD469969497D3C4B42B2505A5D547F65569E8B589BD867997B695B3E6A67266B69DF6CBADC6F779F759B69795D987ABB7D7D5A557E66E27E97AE845A8D8C7C568EAA708F9D50924949946C709663B196598D9A77339A6D6F9C811B9EAE859FB7B3A6B6E2A6B76CAE7373AF9542B2AF7AB2B2BDBA976EBC5330BD7038BE4F5BC3B61CC46EDCC65D64C85558C854A3CB57E5CBA067D298D2D241F3D49FB9DB9B94DC586EDE78C3E37E65E859A1E85ADFEA604DEC59BAEE7D98EF9CB2F35E81F75D";
-    private static final String pikerMinutiate = "A3539EB4617DCF615BA269A2D37E9BA57EA1E68ABAB08D9FCE9C5BB1B6A0E6C05980C469F8C977BDCBBB95D1A89ED383C2D49D8DD845DCDC9896E5ACC7F19A7BF36EDDF956F2FEB7";
 
     // Certificado extraido del eID
     private static String certificate_HEX_DER_encoded = "";
@@ -146,7 +145,7 @@ public class SmartcardTests {
                     System.out.println("Card authentication FP\n\n");
                     selectIAS(channel);
 
-                    if (verifyFP(channel, pikerMinutiate)) {
+                    if (verifyFP(channel, pulgarDer_3CR_1)) {
 
                         MSE_SET_DST(channel);
 
@@ -167,6 +166,25 @@ public class SmartcardTests {
                     break;
                 case 4:
                     System.out.println("User identification");
+
+                    selectIAS(channel);
+                    FCITemplate fcit7000 = selectFile(channel, "7000");
+                    if(fcit7000.isIsDF())
+                          System.out.println(fcit7000.getFileName());
+
+                    FCITemplate fcit7001 = selectFile(channel, "7001");
+                    System.out.println("Binary7001: " + readBinary(channel, fcit7001.getFileSize()));
+
+                    FCITemplate fcit7002 = selectFile(channel, "7002");
+                    System.out.println("Binary7002: "+ readBinary(channel, fcit7002.getFileSize()));            
+
+                  
+                    FCITemplate fcit7004 = selectFile(channel, "7004");
+                    System.out.println("Binary7004: "+ readBinary(channel, fcit7004.getFileSize()));
+
+                    FCITemplate fcit700B = selectFile(channel, "700B");
+                    System.out.println("Binary700B :"+ readBinary(channel, fcit700B.getFileSize()));
+
                     break;
                 case 5:
                     System.out.println("PKI signature");
@@ -183,11 +201,11 @@ public class SmartcardTests {
                     selectIAS(channel);
                     FCITemplate fcit = selectFile(channel, fileID);
                     System.out.println(readBinary(channel, fcit.getFileSize()));
-                    
 
                     break;
                 case 8:
                     System.out.println("Read Card Certificate");
+
                     readCardCertificate(channel);
                     System.exit(0);
                     break;

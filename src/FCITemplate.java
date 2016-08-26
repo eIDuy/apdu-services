@@ -93,7 +93,7 @@ public class FCITemplate {
         this.lifeCycleStatusByte = lifeCycleStatusByte;
     }
     
-    public void buildFromBuffer(byte[] buffer, int offset, int length) throws Exception {
+ public void buildFromBuffer(byte[] buffer, int offset, int length) throws Exception {
         //FABRIZIO: Esta Firma es la semantica que generalmente usan las tarjetas
         //para estas operaciones, aunque no tiene por que ser la que usemos nosotros...
 
@@ -110,14 +110,14 @@ public class FCITemplate {
                 //TODO implement a function to convert
                 this.fileId = (0x00ff & buffer[offset+4])*256 + (0x00ff & buffer[offset+5]);
 
-                //DF name TLV comes after FCI TLV
-                //DF name TLV offset is offset + 2 byte for FCI tag and length + FCI data length
-                //DF name Length position is offset + DF name TLV offset + 1
+                //DF name Data is last on FCI TLV
+                //DF name TLV offset is offset of security attributes length plus the actual length
+                //DF name Length position is DF Name TLV offset + 1
                 //DF name starts at name TLV offset + 2
-                int fciDataLength = 0x00ff & buffer[offset+1];
-                int nameTlvOffset = 2 + fciDataLength;
+                int securityAttributesLength = 0x00ff & buffer[offset+7];
+                int nameTlvOffset = offset + 8 + securityAttributesLength;
                 int nameLength = 0x00ff & buffer[nameTlvOffset+1];
-                ByteBuffer name = ByteBuffer.wrap(Arrays.copyOfRange(buffer, nameTlvOffset+2, nameLength+1));
+                ByteBuffer name = ByteBuffer.wrap(Arrays.copyOfRange(buffer, nameTlvOffset+2, nameTlvOffset+2+nameLength+1));
                 this.fileName = Utils.asciiDecoder.decode(name).toString();
                 break;
             case (byte)0x81:
@@ -134,6 +134,5 @@ public class FCITemplate {
                 //Unknown FCI
                 throw new Exception("Bad/Unknown FCI Template");
         }
-    }
-    
+    }    
 }
