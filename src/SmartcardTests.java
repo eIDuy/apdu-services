@@ -183,6 +183,7 @@ public class SmartcardTests {
                     selectIAS(channel);
                     FCITemplate fcit = selectFile(channel, fileID);
                     System.out.println(readBinary(channel, fcit.getFileSize()));
+                    
 
                     break;
                 case 8:
