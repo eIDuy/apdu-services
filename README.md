@@ -3,6 +3,7 @@
 <h3><b>REQUERIMENTS</b></h3>
 
 javax.smartcardio
+jdk 1.8
 
 <h3><b>WINDOWS</b></h3>
 
