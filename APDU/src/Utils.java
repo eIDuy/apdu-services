@@ -71,21 +71,26 @@ public class Utils {
     }
 
     public static ResponseAPDU sendCommand(CardChannel chan, byte CLASS, byte INS,
-            byte P1, byte P2, byte[] data) throws CardException {
+            byte P1, byte P2, byte[] data, int le) throws CardException {
         int length = data.length; // largo de la data a mandar
         int i = 0;
         int iteraciones = 0;
         int SW1 = 0, SW2 = 0;
         byte[] command;
         ResponseAPDU r = null;
+
+        //si datain vacio
+        // mando el comando con LE solo
         if (length == 0) {
-            // mando el comando con LC 0
+            //Si le distinto de 0 lo agrego al final de command           
             command = new byte[5];
             command[0] = CLASS;
             command[1] = INS;
             command[2] = P1;
             command[3] = P2;
-            command[4] = (byte) 0x00;
+            command[4] = intToByteArray(le)[0];
+            System.out.println("LE:"+le);
+            System.out.println("LE_HEX:"+byteArrayToHex(intToByteArray(le)));
             r = chan.transmit(new CommandAPDU(command));
             SW1 = r.getSW1();
             SW2 = r.getSW2();
@@ -95,12 +100,14 @@ public class Utils {
         while (length - i > 0) {
             iteraciones++;
             if (length - i > 0xFF) {
-                command = new byte[255 + 5];
+            	command = new byte[255 + 6]; //le al final
+                command[261] = intToByteArray(le)[0];
                 command[0] = (byte) (CLASS | 0x10);
                 command[4] = (byte) 0xFF; // mando el maximo de datos que puedo
                 System.arraycopy(data, i, command, 5, 0xFF);
             } else {
-                command = new byte[length - i + 5];
+                command = new byte[length - i + 6];
+                command[length - i + 6 - 1] = intToByteArray(le)[0];//le al final
                 command[0] = CLASS;
                 command[4] = (byte) (length - i); // mando el maximo de datos
                 // que puedo

@@ -106,9 +106,10 @@ public class FCITemplate {
             
         } else {
             //EF
-            this.fileSize = buffer[offset+4]*256 + buffer[offset+5];
+            //& 0xFF para pasar de byte a int.
+            this.fileSize =  (0xff & buffer[offset+4])*256 + (0xff & buffer[offset+5]);
             this.fdb = buffer[offset+8];
-            this.fileId = buffer[offset+11]*256 + buffer[offset+12];
+            this.fileId =  (0xff & buffer[offset+11])*256 +  (0xff & buffer[offset+12]);
             this.lifeCycleStatusByte = buffer[15];
         }
         
