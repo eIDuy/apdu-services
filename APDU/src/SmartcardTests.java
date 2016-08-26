@@ -49,7 +49,7 @@ public class SmartcardTests {
     private static String certificate_HEX_DER_encoded = "";
 
     // Certificado del ministerio del interior, el que firma los del eID
-    private static final String MiCA = "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";
+    private static final String MiCA = "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";
 
     private static final String HASH = "4D7CCCBD17064A12DD43021668679F7B488AFD55AAB1502E0CA8A55F5A8E2C0B";
 
@@ -80,7 +80,7 @@ public class SmartcardTests {
         List<CardTerminal> terminals = factory.terminals().list();
         // System.out.println("Terminals: " + terminals);
         // get the first terminal
-        CardTerminal terminal = terminals.get(1);
+        CardTerminal terminal = terminals.get(0);
         // establish a connection with the card
         Card card = terminal.connect("T=0");
         // System.out.println("card ATR: " +
@@ -115,47 +115,23 @@ public class SmartcardTests {
             switch (swValue) {
                 case 1:
                     System.out.println("Card authentication PIN\n");
-
-                    if (selectIAS(channel)) {
-                        System.out.println("IAS Select Success\n\n");
-                    } else {
-                        System.out.println("IAS Select ERROR\n\n");
-                    }
-
-                    //Ingresa el pin y lo transformo a ASCII
+                    
+                  //Ingresa el pin y lo transformo a ASCII
                     System.out.println("Ingrese el pin");
                     String pin = br.readLine();
                     PIN_ASCII = Utils.PinToAsciiHex(pin);
+                    
+                    selectIAS(channel) ; 
+                    
+                    verifyPIN(channel);
 
-                    if (verifyPIN(channel)) {
-                        System.out.println("PIN Exitoso\n\n");
-                    } else {
-                        System.out.println("PIN fallido\n\n");
-                    }
+                    readCertificate(channel);
 
-                    if (readCertificate(channel)) {
-                        System.out.println("Lectura del certificado exitoso\n\n");
-                    } else {
-                        System.out.println("Lectura del certificado Fallo\n\n");
-                    }
+                    MSE_SET_DST(channel);
 
-                    if (MSE_SET_DST(channel)) {
-                        System.out.println("SET DST\n\n");
-                    } else {
-                        System.out.println("Error SET DST\n\n");
-                    }
+                    PSO_HASH(channel);
 
-                    if (PSO_HASH(channel)) {
-                        System.out.println("PSO HASH\n\n");
-                    } else {
-                        System.out.println("Error PSO HASH\n\n");
-                    }
-
-                    if (PSO_CDS(channel)) {
-                        System.out.println("PSO_ComputeDigitalSignature\n\n");
-                    } else {
-                        System.out.println("Error PSO_ComputeDigitalSignature\n\n");
-                    }
+                    PSO_CDS(channel);
 
                     if (validateHashSignature()) {
                         System.out.println("HASH Validado\n\n");
@@ -168,12 +144,8 @@ public class SmartcardTests {
                 case 2:
                     System.out.println("Card authentication FP\n\n");
 
-                    if (verifyFP(channel)) {
-                        System.out.println("MOC Exitoso");
-                    } else {
-                        System.out.println("MOC fallido");
-                    }
-
+                    verifyFP(channel);
+                    
                     break;
                 case 3:
                     System.out.println("User authentication PIN");
@@ -491,8 +463,6 @@ public class SmartcardTests {
 
         FCITemplate fcit = selectFile(channel, "B001");
         certificate_HEX_DER_encoded = readBinary(channel, fcit.getFileId(), fcit.getFileSize());
-        System.out.println("CERT SIZE: "+fcit.getFileSize());
-        System.out.println(certificate_HEX_DER_encoded);
 
         return true;
     }
@@ -612,8 +582,7 @@ public class SmartcardTests {
 
         //1) Verify the card certificate signature (signed by the C.A.)
         certificado_eID.checkValidity();
-        //Esta dando signature does not match
-        //certificado_eID.verify(pubKeyMiCA);
+        certificado_eID.verify(pubKeyMiCA);
 
         //2) Extract the card public RSA key from the card certificate
         PublicKey pubKeyeID = certificado_eID.getPublicKey();
@@ -623,7 +592,7 @@ public class SmartcardTests {
         decrypt.init(Cipher.DECRYPT_MODE, pubKeyeID);
         String decryptedMessage = Utils.byteArrayToHex(decrypt.doFinal(Utils.hexStringToByteArray(HASH_Signature)));
 
-        System.out.println(decryptedMessage);
+        //System.out.println(decryptedMessage);
 
         //4) If sig is OK  the card is genuine.
         return decryptedMessage.equals(HASH);

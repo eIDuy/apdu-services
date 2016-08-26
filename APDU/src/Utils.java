@@ -89,13 +89,11 @@ public class Utils {
             command[2] = P1;
             command[3] = P2;
             command[4] = intToByteArray(le)[0];
-            System.out.println("LE:"+le);
-            System.out.println("LE_HEX:"+byteArrayToHex(intToByteArray(le)));
             r = chan.transmit(new CommandAPDU(command));
             SW1 = r.getSW1();
             SW2 = r.getSW2();
-            System.out.println("Comando: " + byteArrayToHex(command));
-            System.out.println("Respuesta: " + byteArrayToHex(r.getBytes()));
+            System.out.println(byteArrayToHex(command));
+            System.out.println(byteArrayToHex(r.getBytes()));
         }
         while (length - i > 0) {
             iteraciones++;
@@ -120,8 +118,8 @@ public class Utils {
             r = chan.transmit(new CommandAPDU(command));
             SW1 = r.getSW1();
             SW2 = r.getSW2();
-            System.out.println("Comando: " + byteArrayToHex(command));
-            System.out.println("Respuesta: " + byteArrayToHex(r.getBytes()));
+            System.out.println(byteArrayToHex(command));
+            System.out.println(byteArrayToHex(r.getBytes()));
 
             i += 0xFF;
 

@@ -106,7 +106,6 @@ public class FCITemplate {
             
         } else {
             //EF
-            //& 0xFF para pasar de byte a int.
             this.fileSize =  (0xff & buffer[offset+4])*256 + (0xff & buffer[offset+5]);
             this.fdb = buffer[offset+8];
             this.fileId =  (0xff & buffer[offset+11])*256 +  (0xff & buffer[offset+12]);
