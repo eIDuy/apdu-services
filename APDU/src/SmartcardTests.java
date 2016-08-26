@@ -1,6 +1,5 @@
 
-import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+import java.util.Base64;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -71,7 +70,7 @@ public class SmartcardTests {
      * @throws NoSuchProviderException
      */
     public static void main(String[] args) throws CardException, IOException,
-            CertificateException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException, Base64DecodingException, Exception {
+            CertificateException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException,Exception {
         // TODO code application logic here
         // show the list of available terminals
         TerminalFactory factory = TerminalFactory.getDefault();
@@ -590,7 +589,7 @@ public class SmartcardTests {
         return binaryHexString;
     }
 
-    public static boolean validateHashSignature() throws CertificateException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException, Base64DecodingException {
+    public static boolean validateHashSignature() throws CertificateException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException{
 
         //The terminal can now perform:
         //1) Verify the card certificate signature (signed by the C.A.)
@@ -599,7 +598,7 @@ public class SmartcardTests {
         //4) If sig is OK  the card is genuine.
         //parseo la representacion B64 del certificado de la MiCA a un objeto x509 
         CertificateFactory cf = CertificateFactory.getInstance("X.509");
-        InputStream certificado_b64_MiCA = new ByteArrayInputStream(Base64.decode(MiCA));
+        InputStream certificado_b64_MiCA = new ByteArrayInputStream(Base64.getDecoder().decode(MiCA));
         X509Certificate certificado_MiCA = (X509Certificate) cf.generateCertificate(certificado_b64_MiCA);
         PublicKey pubKeyMiCA = certificado_MiCA.getPublicKey();
 

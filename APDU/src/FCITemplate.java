@@ -108,15 +108,15 @@ public class FCITemplate {
                 this.isEF = false;
                 this.isDF = true;
                 //TODO implement a function to convert
-                this.fileId = (0xff & buffer[offset+4])*256 + (0xff & buffer[offset+5]);
+                this.fileId = (0x00ff & buffer[offset+4])*256 + (0x00ff & buffer[offset+5]);
 
                 //DF name TLV comes after FCI TLV
                 //DF name TLV offset is offset + 2 byte for FCI tag and length + FCI data length
                 //DF name Length position is offset + DF name TLV offset + 1
                 //DF name starts at name TLV offset + 2
-                int fciDataLength = buffer[offset+1];
+                int fciDataLength = 0x00ff & buffer[offset+1];
                 int nameTlvOffset = 2 + fciDataLength;
-                int nameLength = buffer[nameTlvOffset+1];
+                int nameLength = 0x00ff & buffer[nameTlvOffset+1];
                 ByteBuffer name = ByteBuffer.wrap(Arrays.copyOfRange(buffer, nameTlvOffset+2, nameLength+1));
                 this.fileName = Utils.asciiDecoder.decode(name).toString();
                 break;
@@ -125,9 +125,9 @@ public class FCITemplate {
                 //6F148102057F8201018302B0018A01058C0443E5E5009000
                 this.isEF = true;
                 this.isDF = false;
-                this.fileSize =  (0xff & buffer[offset+4])*256 + (0xff & buffer[offset+5]);
+                this.fileSize =  (0x00ff & buffer[offset+4])*256 + (0x00ff & buffer[offset+5]);
                 this.fdb = buffer[offset+8];
-                this.fileId =  (0xff & buffer[offset+11])*256 +  (0xff & buffer[offset+12]);
+                this.fileId =  (0x00ff & buffer[offset+11])*256 +  (0x00ff & buffer[offset+12]);
                 this.lifeCycleStatusByte = buffer[15];
                 break;
             default:
