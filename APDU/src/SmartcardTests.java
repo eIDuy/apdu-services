@@ -32,8 +32,6 @@ import javax.smartcardio.TerminalFactory;
  */
 public class SmartcardTests {
 
-    private static final byte[] selectIAS = Utils.hexStringToByteArray("");
-
     private static final String minucia_3CQ = "761460F21474971A9C6B1C81801D5F641F638220BD4F2243D22299EE229578297EF92A55AF2D5ABD2E79A933BBB4399BC93E591F404A78437E2544699B459A4D4546C34979AA49B9BA4F598051607451406652664F5469B0547990557A6E5B82E25C59595C48AC5D586E63698264B75D666B1B674B9769B5AD6976316DAB4A6E6A9771B2D071583E778B6A784BB27A75997D6FAE7E731B854BA8876F5C8B8B698B89B68E73B491B254938AA9966B309B498B9B68B19B6CE69D5C50A049C7A19BAEA34CD4A55C43A68954A78868AA86A5AA4989AB8958AE46B5AF43CEAF6094B5476AB6449BB7452CB98887BE8637C3454FC44598C44456C6A44BCE4659CE4477CF4433D2848BD5429AD7832FDBA558DB8432E2A670E4845BE54229E9872FECA563EEA477F064";
     private static final String minucia_3CQ_cortada = "761460F21474971A9C6B1C81801D5F641F638220BD4F2243D22299EE229578297EF92A55AF2D5ABD2E79A933BBB4399BC93E591F404A78437E2544699B459A4D4546C34979AA49B9BA4F598051607451406652664F5469B0547990557A6E5B82E25C59595C48AC5D586E63698264B75D666B1B674B9769B5AD6976316DAB4A6E6A9771B2D071583E778B6A784BB27A75997D6FAE7E731B854BA8876F5C8B8B698B89B68E73B491B254938AA9966B309B498B9B68B19B6CE69D5C50A049C7A19B";
     private static final String minucia_3CQ_cortada_2 = "761460F21474971A9C6B1C81801D5F641F638220BD4F2243D22299EE229578297EF92A55AF2D5ABD2E79A933BBB4399BC93E591F404A78437E2544699B459A4D4546C34979AA49B9BA4F598051607451406652664F5469B0547990557A6E5B82E25C59595C48AC5D586E63698264B75D666B1B674B9769B5AD6976316DAB4A6E6A9771B2D071583E778B6A784BB27A75997D6FAE7E731B854BA8876F5C8B8B698B89B68E73B491B254938AA9966B309B498B9B68B19B6CE69D5C50A049C7A19BAEA34CD4A55C43A68954A78868AA86A5AA4989AB8958AE46B5AF43CEAF6094B5476AB6449BB7452CB98887BE8637C3454FC44598C44456C6A4";
@@ -90,7 +88,7 @@ public class SmartcardTests {
         int swValue = 0;
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
-        while (swValue != 6) {
+        while (swValue != 9) {
 
             // Display menu graphics
             System.out.println("\n");
@@ -105,7 +103,9 @@ public class SmartcardTests {
             System.out.println("|  4. User identification      |");
             System.out.println("|  5. PKI signature            |");
             System.out.println("|  6. Card CPLC INFO           |");
-            System.out.println("|  7. Exit                     |");
+            System.out.println("|  7. Read File                |");
+            System.out.println("|  8. Read Card Certificate    |");
+            System.out.println("|  9. Exit                     |");
             System.out.println("============================");
 
             System.out.println("Seleccione una opcion");
@@ -116,12 +116,12 @@ public class SmartcardTests {
                 case 1:
                     System.out.println("Card authentication PIN\n");
                     
-                  //Ingresa el pin y lo transformo a ASCII
-                    System.out.println("Ingrese el pin");
+                    //request PIN and transform to ASCII
+                    System.out.println("Insert PIN");
                     String pin = br.readLine();
                     PIN_ASCII = Utils.PinToAsciiHex(pin);
                     
-                    selectIAS(channel) ; 
+                    selectIAS(channel); 
                     
                     verifyPIN(channel);
 
@@ -143,8 +143,21 @@ public class SmartcardTests {
 
                 case 2:
                     System.out.println("Card authentication FP\n\n");
+                    selectIAS(channel);
+                    
+                    if (verifyFP(channel, pulgarDer_3CR_2)) {
+                        MSE_SET_DST(channel);
 
-                    verifyFP(channel);
+                        PSO_HASH(channel);
+
+                        PSO_CDS(channel);
+
+                        if (validateHashSignature()) {
+                            System.out.println("HASH Validado\n\n");
+                        } else {
+                            System.out.println("HASH Invalido\n\n");
+                        }
+                    }
                     
                     break;
                 case 3:
@@ -160,6 +173,18 @@ public class SmartcardTests {
                     System.out.println("Card CPLC INFO");
                     break;
                 case 7:
+                    System.out.println("Read File");
+                    
+                    System.out.println("Insert File root");
+                    String fileID = br.readLine();
+                    
+                    
+                    break;
+                case 8:
+                    System.out.println("Read Card Certificate");
+                    System.exit(0);
+                    break;
+                case 9:
                     System.out.println("Exit selected");
                     System.exit(0);
                     break;
@@ -253,7 +278,7 @@ public class SmartcardTests {
         String PARAM1 = "04";
         String PARAM2 = "00";
 
-        String dataIN = "A00000001840000001634200";
+        String dataIN = "A00000001840000001634200"; //IAS AID
         // String dataIN = "A0000000180C000001634200";
 
         // ESTO DEBE SER EL APP ID de la IAS
@@ -266,7 +291,7 @@ public class SmartcardTests {
         return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
     }
 
-    private static boolean verifyFP(CardChannel channel) throws CardException {
+    private static boolean verifyFP(CardChannel channel, String minutiae) throws CardException {
         String CLASS = "00";
         String INSTRUCTION = "21";
         String PARAM1 = "00";
@@ -283,7 +308,7 @@ public class SmartcardTests {
         // Como el TLV hijo es minucias + length + value, entonces el largo de
         // este
         // es largo(minucias) + 2
-        dataIN += Utils.byteArrayToHex(Utils.intToByteArray(2 + pulgarDer_3CR_2.length() / 2)); // Length
+        dataIN += Utils.byteArrayToHex(Utils.intToByteArray(2 + minutiae.length() / 2)); // Length
         // del
         // FP
         // container
@@ -295,8 +320,8 @@ public class SmartcardTests {
         // como 81XX igual que en el TLV padre, pero esto no es asi. Se pone el
         // length normal
         dataIN += "81"
-                + Utils.byteArrayToHex(Utils.intToByteArray(pulgarDer_3CR_2.length() / 2));
-        dataIN += pulgarDer_3CR_2;
+                + Utils.byteArrayToHex(Utils.intToByteArray(minutiae.length() / 2));
+        dataIN += minutiae;
 
         byte CLASSbyte = Utils.hexStringToByteArray(CLASS)[0];
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
