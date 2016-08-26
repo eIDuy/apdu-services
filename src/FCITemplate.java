@@ -122,7 +122,7 @@ public class FCITemplate {
                 break;
             case (byte)0x81:
                 //EF
-                //6F148102057F8201018302B0018A01058C0443E5E5009000
+                
                 this.isEF = true;
                 this.isDF = false;
                 this.fileSize =  (0x00ff & buffer[offset+4])*256 + (0x00ff & buffer[offset+5]);

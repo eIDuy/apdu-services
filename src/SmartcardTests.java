@@ -180,6 +180,7 @@ public class SmartcardTests {
 
                   
                     FCITemplate fcit7004 = selectFile(channel, "7004");
+                    
                     System.out.println("Binary7004: "+ readBinary(channel, fcit7004.getFileSize()));
 
                     FCITemplate fcit700B = selectFile(channel, "700B");
