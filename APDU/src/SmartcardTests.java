@@ -71,7 +71,7 @@ public class SmartcardTests {
      * @throws NoSuchProviderException
      */
     public static void main(String[] args) throws CardException, IOException,
-            CertificateException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException,Exception {
+            CertificateException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException, Exception {
         // TODO code application logic here
         // show the list of available terminals
         TerminalFactory factory = TerminalFactory.getDefault();
@@ -115,14 +115,14 @@ public class SmartcardTests {
             switch (swValue) {
                 case 1:
                     System.out.println("Card authentication PIN\n");
-                    
+
                     //request PIN and transform to ASCII
                     System.out.println("Insert PIN");
                     String pin = br.readLine();
                     PIN_ASCII = Utils.PinToAsciiHex(pin);
-                    
-                    selectIAS(channel); 
-                    
+
+                    selectIAS(channel);
+
                     verifyPIN(channel);
 
                     readCertificate(channel);
@@ -133,10 +133,10 @@ public class SmartcardTests {
 
                     PSO_CDS(channel);
 
-                    if (validateHashSignature()) {                        
-                        System.out.println("HASH Validado\n\n");                        
+                    if (validateHashSignature()) {
+                        System.out.println("HASH Validado\n\n");
                     } else {
-                        
+
                         System.out.println("HASH Invalido\n\n");
                     }
 
@@ -145,10 +145,10 @@ public class SmartcardTests {
                 case 2:
                     System.out.println("Card authentication FP\n\n");
                     selectIAS(channel);
-                    
+
                     if (verifyFP(channel, pikerMinutiate)) {
-                        
-                        MSE_SET_DST(channel);                        
+
+                        MSE_SET_DST(channel);
 
                         PSO_HASH(channel);
 
@@ -160,7 +160,7 @@ public class SmartcardTests {
                             System.out.println("HASH Invalido\n\n");
                         }
                     }
-                    
+
                     break;
                 case 3:
                     System.out.println("User authentication PIN");
@@ -176,17 +176,18 @@ public class SmartcardTests {
                     break;
                 case 7:
                     System.out.println("Read File");
-                    
+
                     System.out.println("Insert File ID");
                     String fileID = br.readLine();
-                    
+
                     selectIAS(channel);
                     FCITemplate fcit = selectFile(channel, fileID);
                     System.out.println(readBinary(channel, fcit.getFileSize()));
-                    
+
                     break;
                 case 8:
                     System.out.println("Read Card Certificate");
+                    readCardCertificate(channel);
                     System.exit(0);
                     break;
                 case 9:
@@ -234,7 +235,7 @@ public class SmartcardTests {
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
-        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN),0);
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN), 0);
         return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
 
         // TODO si se codifica esta operacion, se puede armar una clase que
@@ -292,7 +293,7 @@ public class SmartcardTests {
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
-        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN),0);
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN), 0);
         return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
     }
 
@@ -332,7 +333,7 @@ public class SmartcardTests {
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
-        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN),0);
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN), 0);
         return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
 
         // El SW 6A80 indica error de codificacion, es decir, en los TLV
@@ -356,7 +357,7 @@ public class SmartcardTests {
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
-        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN),0);
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN), 0);
         return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
 
         // El SW 6A80 indica error de codificacion, es decir, en los TLV
@@ -377,7 +378,7 @@ public class SmartcardTests {
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
-        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN),0);
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN), 0);
         return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
 
         // El SW 6A80 indica error de codificacion, es decir, en los TLV
@@ -398,7 +399,7 @@ public class SmartcardTests {
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
-        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN),0);
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN), 0);
         return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
 
         // El SW 6A80 indica error de codificacion, es decir, en los TLV
@@ -422,7 +423,7 @@ public class SmartcardTests {
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
-        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN),0);
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN), 0);
         return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
 
         // El SW 6A80 indica error de codificacion, es decir, en los TLV
@@ -450,7 +451,7 @@ public class SmartcardTests {
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
-        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN),0);
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN), 0);
         return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
 
         // El SW 6A80 indica error de codificacion, es decir, en los TLV
@@ -472,7 +473,7 @@ public class SmartcardTests {
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
-        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN),0);
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN), 0);
 
         HASH_Signature = Utils.byteArrayToHex(r.getData());
 
@@ -497,6 +498,32 @@ public class SmartcardTests {
         return true;
     }
 
+    public static boolean readCardCertificate(CardChannel channel) throws CertificateException, Exception {
+
+        // Read card certificate
+        readCertificate(channel);
+
+        // Create X509 Certificate from previously read card certificate
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        InputStream b64eIDCertificate = new ByteArrayInputStream(Utils.hexStringToByteArray(certificate_HEX_DER_encoded));
+        X509Certificate eIDCertificate = (X509Certificate) cf.generateCertificate(b64eIDCertificate);
+
+        String certSerialNumber = Utils.formatHexaString(eIDCertificate.getSerialNumber().toString(16));
+
+        System.out.println("Certificate Serial Number");
+        System.out.println(certSerialNumber);
+        System.out.println("CA Information");
+        System.out.println(eIDCertificate.getIssuerDN());
+        System.out.println("Certificate creation date");
+        System.out.println(eIDCertificate.getNotBefore());
+        System.out.println("Certificate expiration date");
+        System.out.println(eIDCertificate.getNotAfter());
+        System.out.println("Certificate owner information");
+        System.out.println(eIDCertificate.getSubjectDN());
+
+        return true;
+    }
+
     //POR AHORA ESTA SOPORTA SOLO LECTURA DE EF
     //CAPAZ SOPORTA DF TAMBIEN, PERO NO FUE HECHA PARA ESO
     public static FCITemplate selectFile(CardChannel channel, String fileID) throws CardException, Exception {
@@ -513,7 +540,7 @@ public class SmartcardTests {
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
 
-        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN),0);
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN), 0);
 
         // Si la lectura del archivo es exitosa debo construir el fci template
         if (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00) {
@@ -561,12 +588,12 @@ public class SmartcardTests {
             // Param1 y param2 comienzan en 00 00, voy incrementando FF
             // bytes hasta leer el total del binario.
             String PARAM1_PARAM2 = Utils.byteArrayToHex(Utils.intToByteArray(cantBytes));
-            
+
             //uso solo p2 porque la cantidad de bytes que voy leyendo es menor a FF
-            if (cantBytes <= 255){
+            if (cantBytes <= 255) {
                 PARAM1 = "00";
                 PARAM2 = PARAM1_PARAM2.substring(0, 2);
-            }else{
+            } else {
                 PARAM1 = PARAM1_PARAM2.substring(0, 2);
                 PARAM2 = PARAM1_PARAM2.substring(2, 4);
             }
@@ -575,7 +602,7 @@ public class SmartcardTests {
             byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
             byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
 
-            ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN),dataOUTLength);
+            ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN), dataOUTLength);
 
             binaryHexString += Utils.byteArrayToHex(r.getData());
 
@@ -592,7 +619,7 @@ public class SmartcardTests {
         return binaryHexString;
     }
 
-    public static boolean validateHashSignature() throws CertificateException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException{
+    public static boolean validateHashSignature() throws CertificateException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException {
 
         //The terminal can now perform:
         //1) Verify the card certificate signature (signed by the C.A.)
@@ -622,7 +649,6 @@ public class SmartcardTests {
         String decryptedMessage = Utils.byteArrayToHex(decrypt.doFinal(Utils.hexStringToByteArray(HASH_Signature)));
 
         //System.out.println(decryptedMessage);
-
         //4) If sig is OK  the card is genuine.
         return decryptedMessage.equals(HASH);
     }

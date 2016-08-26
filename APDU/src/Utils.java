@@ -20,11 +20,10 @@ import javax.smartcardio.ResponseAPDU;
  */
 public class Utils {
 
-    
     public static Charset asciiCharset = Charset.forName("ASCII");
     public static CharsetEncoder asciiEncoder = asciiCharset.newEncoder();
     public static CharsetDecoder asciiDecoder = asciiCharset.newDecoder();
-    
+
     public static void printBytes(String response, String tag, int beginIndex, int endIndex) {
         System.out.println(tag + subBytes(response, beginIndex, endIndex));
     }
@@ -106,7 +105,7 @@ public class Utils {
         while (length - i > 0) {
             iteraciones++;
             if (length - i > 0xFF) {
-            	command = new byte[255 + 6]; //le al final
+                command = new byte[255 + 6]; //le al final
                 command[261] = intToByteArray(le)[0];
                 command[0] = (byte) (CLASS | 0x10);
                 command[4] = (byte) 0xFF; // mando el maximo de datos que puedo
@@ -163,6 +162,21 @@ public class Utils {
         }
 
         return pinAscii;
+    }
+
+    public static String formatHexaString(String hexaString) {
+        String outHexaString = "";
+        hexaString = hexaString.toUpperCase();
+        int count = 0;//Le agrego espacios a huevo al hexa
+        for (int i = 0; i <= hexaString.length() - 1; i++) {
+            count++;
+            outHexaString += hexaString.charAt(i);
+            if (count % 2 == 0) {
+                outHexaString += " ";
+            }
+        }
+
+        return outHexaString;
     }
 
     public static String bytesToHexFromFile(String filePath) {
