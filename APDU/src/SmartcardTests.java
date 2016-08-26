@@ -136,6 +136,7 @@ public class SmartcardTests {
                     if (validateHashSignature()) {                        
                         System.out.println("HASH Validado\n\n");                        
                     } else {
+                        
                         System.out.println("HASH Invalido\n\n");
                     }
 
