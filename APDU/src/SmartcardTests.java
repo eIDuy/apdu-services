@@ -73,7 +73,7 @@ public class SmartcardTests {
      * @throws NoSuchProviderException
      */
     public static void main(String[] args) throws CardException, IOException,
-            CertificateException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException, Base64DecodingException {
+            CertificateException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException, Base64DecodingException, Exception {
         // TODO code application logic here
         // show the list of available terminals
         TerminalFactory factory = TerminalFactory.getDefault();
@@ -459,9 +459,10 @@ public class SmartcardTests {
         return null;
     }
 
-    public static boolean readCertificate(CardChannel channel) throws CardException {
+    public static boolean readCertificate(CardChannel channel) throws CardException, Exception {
 
         FCITemplate fcit = selectFile(channel, "B001");
+        System.out.println();
         certificate_HEX_DER_encoded = readBinary(channel, fcit.getFileId(), fcit.getFileSize());
 
         return true;
@@ -469,7 +470,7 @@ public class SmartcardTests {
 
     //POR AHORA ESTA SOPORTA SOLO LECTURA DE EF
     //CAPAZ SOPORTA DF TAMBIEN, PERO NO FUE HECHA PARA ESO
-    public static FCITemplate selectFile(CardChannel channel, String fileID) throws CardException {
+    public static FCITemplate selectFile(CardChannel channel, String fileID) throws CardException, Exception {
 
         String CLASS = "00";
         String INSTRUCTION = "A4";

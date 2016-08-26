@@ -1,15 +1,18 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
+
 //7000, 7001, 7002, 7004
-//son los primeros requests al MW id-data
+
 /**
  *
  * @author gdotta
  */
 public class FCITemplate {
+    //Current FCITemplate data does not support security attributes or access
+    //mode bytes
+    
     //TODO solve the EF DF distinction with inheritance
     private boolean isDF;
     private boolean isEF;
@@ -18,6 +21,7 @@ public class FCITemplate {
     private byte fdb; //only for EF
     private int fileId; 
     private byte lifeCycleStatusByte; //only for EF
+    //TODO 
 
     public boolean isIsDF() {
         return isDF;
@@ -89,29 +93,44 @@ public class FCITemplate {
         this.lifeCycleStatusByte = lifeCycleStatusByte;
     }
     
-    public void buildFromBuffer(byte[] buffer, int offset, int length) {
+    public void buildFromBuffer(byte[] buffer, int offset, int length) throws Exception {
         //FABRIZIO: Esta Firma es la semantica que generalmente usan las tarjetas
         //para estas operaciones, aunque no tiene por que ser la que usemos nosotros...
 
 
         //TODO build a neat TLV parser
         if (buffer[offset] != 0x6F) {
-            //error
-            return;
+            throw new Exception("Bad/Unknown FCI Template");
         }
         //TODO support DFs
-        //TODO implement a function to convert
         if (buffer[offset+2] == 0x83) {
             //DF
+            this.isEF = false;
+            this.isDF = true;
+            //TODO implement a function to convert
+            this.fileId = (0xff & buffer[offset+4])*256 + (0xff & buffer[offset+5]);
             
-        } else {
+            //DF name TLV comes after FCI TLV
+            //DF name TLV offset is offset + 2 byte for FCI tag and length + FCI data length
+            //DF name Length position is offset + DF name TLV offset + 1
+            //DF name starts at name TLV offset + 2
+            int fciDataLength = buffer[offset+1];
+            int nameTlvOffset = 2 + fciDataLength;
+            int nameLength = buffer[nameTlvOffset+1];
+            ByteBuffer name = ByteBuffer.wrap(Arrays.copyOfRange(buffer, nameTlvOffset+2, nameLength+1));
+            this.fileName = Utils.asciiDecoder.decode(name).toString();
+        } else if (buffer[offset+2] == 0x81) {
             //EF
+            this.isEF = true;
+            this.isDF = false;
             this.fileSize =  (0xff & buffer[offset+4])*256 + (0xff & buffer[offset+5]);
             this.fdb = buffer[offset+8];
             this.fileId =  (0xff & buffer[offset+11])*256 +  (0xff & buffer[offset+12]);
             this.lifeCycleStatusByte = buffer[15];
+        } else {
+            //Unknown FCI
+            throw new Exception("Bad/Unknown FCI Template");
         }
-        
     }
     
 }

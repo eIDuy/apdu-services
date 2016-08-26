@@ -1,6 +1,9 @@
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CharsetEncoder;
 import javax.smartcardio.CardChannel;
 import javax.smartcardio.CardException;
 import javax.smartcardio.CommandAPDU;
@@ -17,6 +20,11 @@ import javax.smartcardio.ResponseAPDU;
  */
 public class Utils {
 
+    
+    public static Charset asciiCharset = Charset.forName("ASCII");
+    public static CharsetEncoder asciiEncoder = asciiCharset.newEncoder();
+    public static CharsetDecoder asciiDecoder = asciiCharset.newDecoder();
+    
     public static void printBytes(String response, String tag, int beginIndex, int endIndex) {
         System.out.println(tag + subBytes(response, beginIndex, endIndex));
     }
