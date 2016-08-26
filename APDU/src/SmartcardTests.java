@@ -175,9 +175,12 @@ public class SmartcardTests {
                 case 7:
                     System.out.println("Read File");
                     
-                    System.out.println("Insert File root");
+                    System.out.println("Insert File ID");
                     String fileID = br.readLine();
                     
+                    selectIAS(channel);
+                    FCITemplate fcit = selectFile(channel, fileID);
+                    System.out.println(readBinary(channel, fcit.getFileSize()));
                     
                     break;
                 case 8:
@@ -487,8 +490,7 @@ public class SmartcardTests {
     public static boolean readCertificate(CardChannel channel) throws CardException, Exception {
 
         FCITemplate fcit = selectFile(channel, "B001");
-        System.out.println();
-        certificate_HEX_DER_encoded = readBinary(channel, fcit.getFileId(), fcit.getFileSize());
+        certificate_HEX_DER_encoded = readBinary(channel, fcit.getFileSize());
 
         return true;
     }
@@ -516,7 +518,6 @@ public class SmartcardTests {
 
             FCITemplate fcit = new FCITemplate();
             fcit.buildFromBuffer(r.getData(), 0, r.getData().length);
-
             return fcit;
 
         } else {
@@ -526,7 +527,7 @@ public class SmartcardTests {
 
     }
 
-    public static String readBinary(CardChannel channel, int fileID, int fileSize) throws CardException {
+    public static String readBinary(CardChannel channel, int fileSize) throws CardException {
 
         // Construyo el Read Binary, lo que cambia en cada read son P1 y P2
         // porque van variando los offset para ir leyendo el binario hasta llegar al tamaño total
@@ -534,8 +535,8 @@ public class SmartcardTests {
         String CLASS = "00";
         String INSTRUCTION = "B0";
         String dataIN = "";
-        String PARAM1 = "00";
-        String PARAM2 = "00";
+        String PARAM1;
+        String PARAM2;
 
         int FF_int = Integer.parseInt("FF", 16);
 
