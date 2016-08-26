@@ -148,8 +148,7 @@ public class SmartcardTests {
                     
                     if (verifyFP(channel, pikerMinutiate)) {
                         
-                        MSE_SET_DST(channel);
-                        
+                        MSE_SET_DST(channel);                        
 
                         PSO_HASH(channel);
 
