@@ -133,7 +133,9 @@ public class SmartcardTests {
                     PSO_CDS(channel);
 
                     if (validateHashSignature()) {
+                        
                         System.out.println("HASH Validado\n\n");
+                        
                     } else {
                         System.out.println("HASH Invalido\n\n");
                     }
