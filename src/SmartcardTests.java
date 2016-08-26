@@ -78,7 +78,7 @@ public class SmartcardTests {
         List<CardTerminal> terminals = factory.terminals().list();
         // System.out.println("Terminals: " + terminals);
         // get the first terminal
-        CardTerminal terminal = terminals.get(1);
+        CardTerminal terminal = terminals.get(0);
         // establish a connection with the card
         Card card = terminal.connect("T=0");
         // System.out.println("card ATR: " +
