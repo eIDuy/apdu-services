@@ -2,9 +2,8 @@
 
 ## Requirements
 
-javax.smartcardio
-
-JDK 1.8
++ javax.smartcardio
++ JDK 1.8
 
 ### Windows
 
