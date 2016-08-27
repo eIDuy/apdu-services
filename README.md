@@ -1,15 +1,15 @@
-# APDU
+# APDU services
 
-<h3><b>REQUERIMENTS</b></h3>
+## Requirements
 
-javax.smartcardio</br>
-jdk 1.8
+javax.smartcardio
+JDK 1.8
 
-<h3><b>WINDOWS</b></h3>
+### Windows
 
 Download and install Java Card Classic Development Kit 
 http://www.oracle.com/technetwork/java/embedded/javacard/downloads/javacard-sdk-2043229.html
 
-<h3><b>LINUX</b></h3>
+### Linux
 
-sudo apt-get install libpcsclite1 pcscd pcsc-tools
+```sudo apt-get install libpcsclite1 pcscd pcsc-tools```
