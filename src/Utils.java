@@ -1,6 +1,8 @@
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
@@ -78,13 +80,14 @@ public class Utils {
     }
 
     public static ResponseAPDU sendCommand(CardChannel chan, byte CLASS, byte INS,
-            byte P1, byte P2, byte[] data, int le) throws CardException {
+            byte P1, byte P2, byte[] data, int le) throws CardException, FileNotFoundException, UnsupportedEncodingException {
         int length = data.length; // largo de la data a mandar
         int i = 0;
         int iteraciones = 0;
         int SW1 = 0, SW2 = 0;
         byte[] command;
         ResponseAPDU r = null;
+        LogUtils logUtils = LogUtils.getInstance();
 
         //si datain vacio
         // mando el comando con LE solo
@@ -99,8 +102,8 @@ public class Utils {
             r = chan.transmit(new CommandAPDU(command));
             SW1 = r.getSW1();
             SW2 = r.getSW2();
-            System.out.println(byteArrayToHex(command));
-            System.out.println(byteArrayToHex(r.getBytes()));
+            logUtils.logCommand(byteArrayToHex(command),"C");
+            logUtils.logCommand(byteArrayToHex(r.getBytes()),"R");
         }
         while (length - i > 0) {
             iteraciones++;
@@ -125,8 +128,8 @@ public class Utils {
             r = chan.transmit(new CommandAPDU(command));
             SW1 = r.getSW1();
             SW2 = r.getSW2();
-            System.out.println(byteArrayToHex(command));
-            System.out.println(byteArrayToHex(r.getBytes()));
+            logUtils.logCommand(byteArrayToHex(command),"C");
+            logUtils.logCommand(byteArrayToHex(r.getBytes()),"R");
 
             i += 0xFF;
 

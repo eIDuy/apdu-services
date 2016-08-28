@@ -2,9 +2,11 @@
 import java.util.Base64;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -77,15 +79,35 @@ public class SmartcardTests {
         List<CardTerminal> terminals = factory.terminals().list();
         // System.out.println("Terminals: " + terminals);
         // get the first terminal
-        CardTerminal terminal = terminals.get(0);
+        CardTerminal terminal = terminals.get(1);
         // establish a connection with the card
         Card card = terminal.connect("T=0");
         // System.out.println("card ATR: " +
         // byteArrayToHex(card.getATR().getBytes()));
         CardChannel channel = card.getBasicChannel();
-
-        int swValue = 0;
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+        //Log Configuration
+        System.out.println("Input the log path or press enter to default location.");
+        String logPath = br.readLine();
+
+        if (logPath.equals("")) {
+            logPath = System.getProperty("user.dir");
+        }
+
+        System.out.println("Input \"C\" for APDU Commands only, \"R\" for APDU Responses only, blank for both \n");
+
+        String logOption = br.readLine();
+
+        LogUtils logUtils = LogUtils.getInstance();
+        logUtils.configure(logPath,logOption);
+
+        System.out.println("Path configured: "+logPath);
+        
+        
+        //Log Configuration done
+        
+        int swValue = 0;
 
         while (swValue != 9) {
 
@@ -169,22 +191,22 @@ public class SmartcardTests {
 
                     selectIAS(channel);
                     FCITemplate fcit7000 = selectFile(channel, "7000");
-                    if(fcit7000.isIsDF())
-                          System.out.println(fcit7000.getFileName());
+                    if (fcit7000.isIsDF()) {
+                        System.out.println(fcit7000.getFileName());
+                    }
 
                     FCITemplate fcit7001 = selectFile(channel, "7001");
                     System.out.println("Binary7001: " + readBinary(channel, fcit7001.getFileSize()));
 
                     FCITemplate fcit7002 = selectFile(channel, "7002");
-                    System.out.println("Binary7002: "+ readBinary(channel, fcit7002.getFileSize()));            
+                    System.out.println("Binary7002: " + readBinary(channel, fcit7002.getFileSize()));
 
-                  
                     FCITemplate fcit7004 = selectFile(channel, "7004");
-                    
-                    System.out.println("Binary7004: "+ readBinary(channel, fcit7004.getFileSize()));
+
+                    System.out.println("Binary7004: " + readBinary(channel, fcit7004.getFileSize()));
 
                     FCITemplate fcit700B = selectFile(channel, "700B");
-                    System.out.println("Binary700B :"+ readBinary(channel, fcit700B.getFileSize()));
+                    System.out.println("Binary700B :" + readBinary(channel, fcit700B.getFileSize()));
 
                     break;
                 case 5:
@@ -206,7 +228,7 @@ public class SmartcardTests {
                     break;
                 case 8:
                     System.out.println("Read Card Certificate");
-
+                    selectIAS(channel);
                     readCardCertificate(channel);
                     System.exit(0);
                     break;
@@ -243,7 +265,7 @@ public class SmartcardTests {
 	 * 
 	 * // disconnect card.disconnect(false); } }
      */
-    public static boolean getCPLCData(CardChannel channel) throws CardException {
+    public static boolean getCPLCData(CardChannel channel) throws CardException, FileNotFoundException, UnsupportedEncodingException {
         String CLASS = "80";
         String INSTRUCTION = "CA";
         String PARAM1 = "9F";
@@ -298,7 +320,7 @@ public class SmartcardTests {
     }
 
     // Retorna true si pudo seleccionar la aplicacion IAS
-    public static boolean selectIAS(CardChannel channel) throws CardException {
+    public static boolean selectIAS(CardChannel channel) throws CardException, FileNotFoundException, UnsupportedEncodingException {
         String CLASS = "00";
         String INSTRUCTION = "A4";
         String PARAM1 = "04";
@@ -317,7 +339,7 @@ public class SmartcardTests {
         return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
     }
 
-    private static boolean verifyFP(CardChannel channel, String minutiae) throws CardException {
+    private static boolean verifyFP(CardChannel channel, String minutiae) throws CardException, FileNotFoundException, UnsupportedEncodingException {
         String CLASS = "00";
         String INSTRUCTION = "21";
         String PARAM1 = "00";
@@ -360,7 +382,7 @@ public class SmartcardTests {
         // El SW 63Cx indica error de match y que quedan x intentos
     }
 
-    private static boolean verifyPIN(CardChannel channel) throws CardException {
+    private static boolean verifyPIN(CardChannel channel) throws CardException, FileNotFoundException, UnsupportedEncodingException {
         String CLASS = "00";
         String INSTRUCTION = "20";
         String PARAM1 = "00";
@@ -385,7 +407,7 @@ public class SmartcardTests {
         // 9000 es SW de exito
     }
 
-    private static boolean isVerifiedPIN(CardChannel channel) throws CardException {
+    private static boolean isVerifiedPIN(CardChannel channel) throws CardException, FileNotFoundException, UnsupportedEncodingException {
         String CLASS = "00";
         String INSTRUCTION = "20";
         String PARAM1 = "00";
@@ -405,7 +427,7 @@ public class SmartcardTests {
         // El SW 63Cx indica error de match y que quedan x intentos
     }
 
-    private static boolean unverifyPIN(CardChannel channel) throws CardException {
+    private static boolean unverifyPIN(CardChannel channel) throws CardException, FileNotFoundException, UnsupportedEncodingException {
         String CLASS = "00";
         String INSTRUCTION = "20";
         String PARAM1 = "FF";
@@ -427,7 +449,7 @@ public class SmartcardTests {
     }
 
     // Precondicion: Verify PIN
-    public static boolean MSE_SET_DST(CardChannel channel) throws CardException {
+    public static boolean MSE_SET_DST(CardChannel channel) throws CardException, FileNotFoundException, UnsupportedEncodingException {
 
         String CLASS = "00";
         String INSTRUCTION = "22";
@@ -452,7 +474,7 @@ public class SmartcardTests {
     }
 
     // Precondicion: Verify PIN
-    public static boolean PSO_HASH(CardChannel channel) throws CardException {
+    public static boolean PSO_HASH(CardChannel channel) throws CardException, FileNotFoundException, UnsupportedEncodingException {
 
         String CLASS = "00";
         String INSTRUCTION = "2A";
@@ -480,7 +502,7 @@ public class SmartcardTests {
     }
 
     // Precondicion: PSO_HASH
-    public static boolean PSO_CDS(CardChannel channel) throws CardException {
+    public static boolean PSO_CDS(CardChannel channel) throws CardException, FileNotFoundException, UnsupportedEncodingException {
 
         String CLASS = "00";
         String INSTRUCTION = "2A";
@@ -576,7 +598,7 @@ public class SmartcardTests {
 
     }
 
-    public static String readBinary(CardChannel channel, int fileSize) throws CardException {
+    public static String readBinary(CardChannel channel, int fileSize) throws CardException, FileNotFoundException, UnsupportedEncodingException {
 
         // Construyo el Read Binary, lo que cambia en cada read son P1 y P2
         // porque van variando los offset para ir leyendo el binario hasta llegar al tamaño total
