@@ -114,8 +114,12 @@ public class Utils {
                 command[4] = (byte) 0xFF; // mando el maximo de datos que puedo
                 System.arraycopy(data, i, command, 5, 0xFF);
             } else {
-                command = new byte[length - i + 6];
-                command[length - i + 6 - 1] = intToByteArray(le)[0];//le al final
+                if (le > 0 || (le == 0 && length == 0)) {
+                    command = new byte[length - i + 6];
+                    command[length - i + 6 - 1] = intToByteArray(le)[0];//le al final
+                } else {
+                    command = new byte[length - i + 5]; //sin  le al final
+                }
                 command[0] = CLASS;
                 command[4] = (byte) (length - i); // mando el maximo de datos
                 // que puedo
@@ -212,6 +216,35 @@ public class Utils {
         }
 
         return hexfromBinary;
+    }
+    
+    public static void sortMinutiae(byte[] minutiae) {
+        int n = minutiae.length;
+        System.out.println("size: " + n);
+        int k; 
+        for (int m = n; m >= 0; m-=3) {
+            for (int i = 0; i < m - 3; i+=3) {
+                k = i + 3;
+                if ((minutiae[i+1] & 0xFF) > (minutiae[k+1] & 0xFF)) {
+                    swapMinutiae(i, k, minutiae);
+                } else if (minutiae[i+1] == minutiae[k+1] && (minutiae[i] & 0xFF) > (minutiae[k] & 0xFF)) {
+                    swapMinutiae(i, k, minutiae);
+                }
+            }
+        }
+    }
+ 
+    private static void swapMinutiae(int i, int j, byte[] array) {
+        byte temp;
+        temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+        temp = array[i+1];
+        array[i+1] = array[j+1];
+        array[j+1] = temp;
+        temp = array[i+2];
+        array[i+2] = array[j+2];
+        array[j+2] = temp;
     }
 
 }

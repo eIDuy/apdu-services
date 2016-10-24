@@ -43,7 +43,7 @@ public class SmartcardTests {
 
     private static final String pulgarDer_3CR_1 = "A3085C99087D860C9BA00E7B1E12434113605415602218634A184095197AB8199A731C9C6D1DBD071F4568265DC9305966337D7E339BAC395B263B65A73CBA393F62FC3F9672419DDD46995C485F69497D3C4B42455064B2505A5D547F65569E8B589B6A5D7C0D5F4AD867997B695B3E6A67266B69DF6CBA696D7CDC6F779F759BBA767969795D987ABB727D797D7D5AB47DB9557E66E27E97AE845A8D8C7C568EAA708F9D68916350924949946C709663B196598D9A77339A6D6F9C811B9EAE859FB784A475B3A6B6E2A6B76CAE7373AF95D8AF9942B2AF7AB2B228B650BDBA976EBC5330BD7038BE4F5BC3B61CC46EDCC65D64C85558C854";
     private static final String pulgarDer_3CR_2 = "A3085C860C9B1E12435415602218634A184095197AB8199A731C9C6D1DBD071F4568265DC930597E339BAC395B263B65393F62FC3F9672419DDD469969497D3C4B42B2505A5D547F65569E8B589BD867997B695B3E6A67266B69DF6CBADC6F779F759B69795D987ABB7D7D5A557E66E27E97AE845A8D8C7C568EAA708F9D50924949946C709663B196598D9A77339A6D6F9C811B9EAE859FB7B3A6B6E2A6B76CAE7373AF9542B2AF7AB2B2BDBA976EBC5330BD7038BE4F5BC3B61CC46EDCC65D64C85558C854A3CB57E5CBA067D298D2D241F3D49FB9DB9B94DC586EDE78C3E37E65E859A1E85ADFEA604DEC59BAEE7D98EF9CB2F35E81F75D";
-
+    
     // Certificado extraido del eID
     private static String certificate_HEX_DER_encoded = "";
 
@@ -79,7 +79,7 @@ public class SmartcardTests {
         List<CardTerminal> terminals = factory.terminals().list();
         // System.out.println("Terminals: " + terminals);
         // get the first terminal
-        CardTerminal terminal = terminals.get(1);
+        CardTerminal terminal = terminals.get(0);
         // establish a connection with the card
         Card card = terminal.connect("T=0");
         // System.out.println("card ATR: " +
@@ -167,7 +167,7 @@ public class SmartcardTests {
                     System.out.println("Card authentication FP\n\n");
                     selectIAS(channel);
 
-                    if (verifyFP(channel, pulgarDer_3CR_1)) {
+                    if (verifyFP(channel, minucia_3CQ)) {
 
                         MSE_SET_DST(channel);
 
@@ -356,7 +356,12 @@ public class SmartcardTests {
         // Como el TLV hijo es minucias + length + value, entonces el largo de
         // este
         // es largo(minucias) + 2
-        dataIN += Utils.byteArrayToHex(Utils.intToByteArray(2 + minutiae.length() / 2)); // Length
+        int largo_value = 2 + minutiae.length() / 2;
+        if (largo_value > 0x7F) {
+            dataIN += "81";
+            //Esto es porque dice que es una estructura BER-TLV, y se codifica con el 81 adelante
+        }
+        dataIN += Utils.byteArrayToHex(Utils.intToByteArray(largo_value)); // Length
         // del
         // FP
         // container
@@ -369,13 +374,17 @@ public class SmartcardTests {
         // length normal
         dataIN += "81"
                 + Utils.byteArrayToHex(Utils.intToByteArray(minutiae.length() / 2));
-        dataIN += minutiae;
+        
+        //hay que ordenar las minucias explicitamente
+        byte[] bMinutiae = Utils.hexStringToByteArray(minutiae);
+        Utils.sortMinutiae(bMinutiae);
+        dataIN += Utils.byteArrayToHex(bMinutiae);
 
         byte CLASSbyte = Utils.hexStringToByteArray(CLASS)[0];
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
         byte P2byte = Utils.hexStringToByteArray(PARAM2)[0];
-        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN), 0);
+        ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN),0);
         return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
 
         // El SW 6A80 indica error de codificacion, es decir, en los TLV
