@@ -2,7 +2,9 @@
 import java.util.Base64;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -11,11 +13,16 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PublicKey;
+import java.security.Security;
 import java.security.SignatureException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -26,13 +33,38 @@ import javax.smartcardio.CardException;
 import javax.smartcardio.CardTerminal;
 import javax.smartcardio.ResponseAPDU;
 import javax.smartcardio.TerminalFactory;
+import org.bouncycastle.asn1.ASN1Encodable;
+import org.bouncycastle.asn1.ASN1InputStream;
+import org.bouncycastle.asn1.ASN1Integer;
+import org.bouncycastle.asn1.ASN1Null;
+import org.bouncycastle.asn1.ASN1ObjectIdentifier;
+import org.bouncycastle.asn1.ASN1OctetString;
+import org.bouncycastle.asn1.ASN1Primitive;
+import org.bouncycastle.asn1.ASN1Sequence;
+import org.bouncycastle.asn1.ASN1SequenceParser;
+import org.bouncycastle.asn1.util.ASN1Dump;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cms.CMSException;
+import org.bouncycastle.cms.CMSProcessable;
+import org.bouncycastle.cms.CMSSignedData;
+import org.bouncycastle.cms.SignerInformation;
+import org.bouncycastle.cms.SignerInformationStore;
+import org.bouncycastle.cms.jcajce.JcaSimpleSignerInfoVerifierBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.util.Store;
 
 /**
  *
  * @author gdotta
  */
 public class SmartcardTests {
-
+    //add BC provider for validation to work
+    static {
+        Security.addProvider(new BouncyCastleProvider());
+    }
+    
     private static final String minucia_3CQ = "761460F21474971A9C6B1C81801D5F641F638220BD4F2243D22299EE229578297EF92A55AF2D5ABD2E79A933BBB4399BC93E591F404A78437E2544699B459A4D4546C34979AA49B9BA4F598051607451406652664F5469B0547990557A6E5B82E25C59595C48AC5D586E63698264B75D666B1B674B9769B5AD6976316DAB4A6E6A9771B2D071583E778B6A784BB27A75997D6FAE7E731B854BA8876F5C8B8B698B89B68E73B491B254938AA9966B309B498B9B68B19B6CE69D5C50A049C7A19BAEA34CD4A55C43A68954A78868AA86A5AA4989AB8958AE46B5AF43CEAF6094B5476AB6449BB7452CB98887BE8637C3454FC44598C44456C6A44BCE4659CE4477CF4433D2848BD5429AD7832FDBA558DB8432E2A670E4845BE54229E9872FECA563EEA477F064";
     private static final String minucia_3CQ_cortada = "761460F21474971A9C6B1C81801D5F641F638220BD4F2243D22299EE229578297EF92A55AF2D5ABD2E79A933BBB4399BC93E591F404A78437E2544699B459A4D4546C34979AA49B9BA4F598051607451406652664F5469B0547990557A6E5B82E25C59595C48AC5D586E63698264B75D666B1B674B9769B5AD6976316DAB4A6E6A9771B2D071583E778B6A784BB27A75997D6FAE7E731B854BA8876F5C8B8B698B89B68E73B491B254938AA9966B309B498B9B68B19B6CE69D5C50A049C7A19B";
     private static final String minucia_3CQ_cortada_2 = "761460F21474971A9C6B1C81801D5F641F638220BD4F2243D22299EE229578297EF92A55AF2D5ABD2E79A933BBB4399BC93E591F404A78437E2544699B459A4D4546C34979AA49B9BA4F598051607451406652664F5469B0547990557A6E5B82E25C59595C48AC5D586E63698264B75D666B1B674B9769B5AD6976316DAB4A6E6A9771B2D071583E778B6A784BB27A75997D6FAE7E731B854BA8876F5C8B8B698B89B68E73B491B254938AA9966B309B498B9B68B19B6CE69D5C50A049C7A19BAEA34CD4A55C43A68954A78868AA86A5AA4989AB8958AE46B5AF43CEAF6094B5476AB6449BB7452CB98887BE8637C3454FC44598C44456C6A4";
@@ -72,6 +104,7 @@ public class SmartcardTests {
      * @throws NoSuchProviderException
      */
     public static void main(String[] args) throws CardException, IOException,
+            
             CertificateException, InvalidKeyException, NoSuchAlgorithmException, SignatureException, NoSuchPaddingException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException, Exception {
         // TODO code application logic here
         // show the list of available terminals
@@ -191,22 +224,45 @@ public class SmartcardTests {
 
                     selectIAS(channel);
                     FCITemplate fcit7000 = selectFile(channel, "7000");
-                    if (fcit7000.isIsDF()) {
-                        System.out.println(fcit7000.getFileName());
-                    }
+                    //if (fcit7000.isIsDF()) {
+                        //System.out.println(fcit7000.getFileName());
+                    //}
 
                     FCITemplate fcit7001 = selectFile(channel, "7001");
-                    System.out.println("Binary7001: " + readBinary(channel, fcit7001.getFileSize()));
+                    String cardNumberFile = readBinary(channel, fcit7001.getFileSize());
+                    System.out.println("Binary7001: " + cardNumberFile);
 
                     FCITemplate fcit7002 = selectFile(channel, "7002");
-                    System.out.println("Binary7002: " + readBinary(channel, fcit7002.getFileSize()));
+                    String bioFile =  readBinary(channel, fcit7002.getFileSize());
+                    System.out.println("Binary7002: " + bioFile);
 
                     FCITemplate fcit7004 = selectFile(channel, "7004");
-
-                    System.out.println("Binary7004: " + readBinary(channel, fcit7004.getFileSize()));
+                    String imgFile = readBinary(channel, fcit7004.getFileSize());
+//                    String result2 = result.substring(10);
+//                    DataOutputStream os = new DataOutputStream(new FileOutputStream("/Users/gdotta/Desktop/a.jpg"));
+//                    os.write(Utils.hexStringToByteArray(result2));
+//                    os.close();
+                    System.out.println("Binary7004: " + imgFile);
 
                     FCITemplate fcit700B = selectFile(channel, "700B");
-                    System.out.println("Binary700B :" + readBinary(channel, fcit700B.getFileSize()));
+                    String mrzFile = readBinary(channel, fcit700B.getFileSize());
+                    System.out.println("Binary700B :" + mrzFile);
+                    
+                    //VARIABLE - not all eID Cards have the SOD in the chip
+                    //in the example validation is done if and only if sod present
+                    FCITemplate fcit711D = selectFile(channel, "711D");
+                    if (fcit711D != null) {
+                        String sodFile = readBinary(channel, fcit711D.getFileSize());
+                        System.out.println("Binary711D :" + sodFile);
+                        
+                        if (verifySodSignature(cardNumberFile, bioFile, imgFile, mrzFile, sodFile)) {
+                            System.out.println("SIGNATURE CORRECT");
+                        } else {
+                            System.out.println("SIGNATURE INCORRECT");
+                        }
+                    } else {
+                        System.out.println("DATA ON CARD IS UNSIGNED");
+                    }
 
                     break;
                 case 5:
@@ -702,6 +758,81 @@ public class SmartcardTests {
         //System.out.println(decryptedMessage);
         //4) If sig is OK  the card is genuine.
         return decryptedMessage.equals(HASH);
+    }
+
+    private static boolean verifySodSignature(String cardNumberFile, String bioFile, 
+            String imgFile, String mrzFile, String sodFile) throws CMSException, CertificateException, OperatorCreationException, IOException {
+        //remove first 4 bytes: 1 for the tag (77h) and 3 for the length (82XXXXh)
+        String p7string = sodFile.substring(8);
+        CMSSignedData s = new CMSSignedData(Utils.hexStringToByteArray(p7string));
+        
+        //STEP 1 - Obtain Hashes from SOD
+        CMSProcessable signedContent = s.getSignedContent() ;
+        byte[] originalContent  = (byte[]) signedContent.getContent();     
+        System.out.println(Utils.byteArrayToHex(originalContent));
+        ASN1InputStream input = new ASN1InputStream(originalContent);
+
+        //TODO - Check if this structure is a standard and improve parsing
+        ASN1Primitive p;
+        Map<Integer,byte[]> hashes = new HashMap<Integer,byte[]>();
+        while ((p = input.readObject()) != null) {
+            //outer sequence
+            ASN1Sequence outerSeq = ASN1Sequence.getInstance(p);
+            
+            //FIRST - integer ZERO
+            ASN1Integer zero = ASN1Integer.getInstance(outerSeq.getObjectAt(0));
+            System.out.println("Integer: " + zero.getValue());
+            //SECOND - OID Container Sequence
+            ASN1Sequence oidSequence = ASN1Sequence.getInstance(outerSeq.getObjectAt(1));
+            ASN1ObjectIdentifier oid = ASN1ObjectIdentifier.getInstance(oidSequence.getObjectAt(0));
+            System.out.println(oid.getId());
+            ASN1Null nul = ASN1Null.getInstance(oidSequence.getObjectAt(1));
+            //THIRD - File Hashes Sequence
+            ASN1Sequence hashesSequence = ASN1Sequence.getInstance(outerSeq.getObjectAt(2));
+            ASN1SequenceParser par = hashesSequence.parser();
+            ASN1Encodable hashPair;
+            while ((hashPair = par.readObject()) != null) {
+                //each entry is a pair of (integer,octetString)
+                ASN1Sequence hashPairSeq = ASN1Sequence.getInstance(hashPair);
+                ASN1Integer fileID = ASN1Integer.getInstance(hashPairSeq.getObjectAt(0));
+                ASN1OctetString hashValue = ASN1OctetString.getInstance(hashPairSeq.getObjectAt(1));
+                System.out.println("File: " + fileID.getValue() + " - " + Utils.byteArrayToHex(hashValue.getOctets()));
+                hashes.put(fileID.getValue().intValue(), hashValue.getOctets());
+            }
+            //System.out.println(ASN1Dump.dumpAsString(p));
+        }
+        
+        //STEP 2 - Compute and compare Hashes
+        //TODO
+        
+
+        //STEP 3 - Verify Signature
+        Store store = s.getCertificates(); 
+        SignerInformationStore signers = s.getSignerInfos(); 
+
+        Collection c = signers.getSigners(); 
+        Iterator it = c.iterator(); 
+        
+        boolean ret = false;
+        while (it.hasNext()) { 
+            SignerInformation signer = (SignerInformation)it.next(); 
+            //2.16.840.1.101.3.4.2.1 - SHA256
+            System.out.println(signer.getDigestAlgOID());
+            //1.2.840.10045.4.3.2 - ecdsa-with-SHA256
+            System.out.println(signer.getEncryptionAlgOID());
+            
+            Collection certCollection = store.getMatches(signer.getSID()); 
+            Iterator certIt = certCollection.iterator(); 
+
+            X509CertificateHolder certHolder = (X509CertificateHolder)certIt.next(); 
+            X509Certificate cert = new JcaX509CertificateConverter().setProvider("BC").getCertificate(certHolder); 
+
+            if (signer.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider("BC").build(cert))) {
+                ret = true; 
+            }
+        }
+        
+        return ret;
     }
 
 }
