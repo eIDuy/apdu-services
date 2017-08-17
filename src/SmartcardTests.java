@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PublicKey;
@@ -761,7 +762,7 @@ public class SmartcardTests {
     }
 
     private static boolean verifySodSignature(String cardNumberFile, String bioFile, 
-            String imgFile, String mrzFile, String sodFile) throws CMSException, CertificateException, OperatorCreationException, IOException {
+            String imgFile, String mrzFile, String sodFile) throws CMSException, CertificateException, OperatorCreationException, IOException, NoSuchAlgorithmException {
         //remove first 4 bytes: 1 for the tag (77h) and 3 for the length (82XXXXh)
         String p7string = sodFile.substring(8);
         CMSSignedData s = new CMSSignedData(Utils.hexStringToByteArray(p7string));
@@ -769,11 +770,13 @@ public class SmartcardTests {
         //STEP 1 - Obtain Hashes from SOD
         CMSProcessable signedContent = s.getSignedContent() ;
         byte[] originalContent  = (byte[]) signedContent.getContent();     
-        System.out.println(Utils.byteArrayToHex(originalContent));
+        //System.out.println(Utils.byteArrayToHex(originalContent));
         ASN1InputStream input = new ASN1InputStream(originalContent);
 
         //TODO - Check if this structure is a standard and improve parsing
         ASN1Primitive p;
+        //if algOid is not obtained, use SHA-256 as default
+        ASN1ObjectIdentifier algOid = new ASN1ObjectIdentifier("2.16.840.1.101.3.4.2.1");
         Map<Integer,byte[]> hashes = new HashMap<Integer,byte[]>();
         while ((p = input.readObject()) != null) {
             //outer sequence
@@ -781,12 +784,14 @@ public class SmartcardTests {
             
             //FIRST - integer ZERO
             ASN1Integer zero = ASN1Integer.getInstance(outerSeq.getObjectAt(0));
-            System.out.println("Integer: " + zero.getValue());
+            //System.out.println("Integer: " + zero.getValue());
+            
             //SECOND - OID Container Sequence
             ASN1Sequence oidSequence = ASN1Sequence.getInstance(outerSeq.getObjectAt(1));
-            ASN1ObjectIdentifier oid = ASN1ObjectIdentifier.getInstance(oidSequence.getObjectAt(0));
-            System.out.println(oid.getId());
+            algOid = ASN1ObjectIdentifier.getInstance(oidSequence.getObjectAt(0));
+            //System.out.println(algOid.getId());
             ASN1Null nul = ASN1Null.getInstance(oidSequence.getObjectAt(1));
+            
             //THIRD - File Hashes Sequence
             ASN1Sequence hashesSequence = ASN1Sequence.getInstance(outerSeq.getObjectAt(2));
             ASN1SequenceParser par = hashesSequence.parser();
@@ -796,16 +801,76 @@ public class SmartcardTests {
                 ASN1Sequence hashPairSeq = ASN1Sequence.getInstance(hashPair);
                 ASN1Integer fileID = ASN1Integer.getInstance(hashPairSeq.getObjectAt(0));
                 ASN1OctetString hashValue = ASN1OctetString.getInstance(hashPairSeq.getObjectAt(1));
-                System.out.println("File: " + fileID.getValue() + " - " + Utils.byteArrayToHex(hashValue.getOctets()));
                 hashes.put(fileID.getValue().intValue(), hashValue.getOctets());
             }
             //System.out.println(ASN1Dump.dumpAsString(p));
         }
         
         //STEP 2 - Compute and compare Hashes
-        //TODO
         
+        //01 - Card number
+        //Data is padded with 76 bytes 3C "<"
+        cardNumberFile = cardNumberFile + "3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C";
+        //new wrapping TLV is 5F1F plus length
+        cardNumberFile = "5F1F" + Utils.byteArrayToHex(Utils.intToByteArray(cardNumberFile.length() / 2)) + cardNumberFile;
+        //outer wrapping TLV is 61h plus length
+        cardNumberFile = "61" + Utils.byteArrayToHex(Utils.intToByteArray(cardNumberFile.length() / 2)) + cardNumberFile;
+        
+        //Previous algOid holds oid of used hashing algorithm
+        MessageDigest md = MessageDigest.getInstance(algOid.getId());
+        byte [] hash = md.digest(Utils.hexStringToByteArray(cardNumberFile));
+        
+        if (Utils.byteArrayToHex(hash).equals(Utils.byteArrayToHex(hashes.get(1)))) {
+            System.out.println("Card Number hash CHECKS!!!");
+        } else {
+            System.out.println("Card Number hash FAILS");
+        }
+        
+        //02 - BIO Information 
+        //Data is not padded
+        //outer wrapping TLV is 75h plus ber-length
+        bioFile = "75" + Utils.berLength(bioFile.length() / 2) + bioFile;
+        
+        md = MessageDigest.getInstance(algOid.getId());
+        hash = md.digest(Utils.hexStringToByteArray(bioFile));
+        
+        if (Utils.byteArrayToHex(hash).equals(Utils.byteArrayToHex(hashes.get(2)))) {
+            System.out.println("BIO File hash CHECKS!!!");
+        } else {
+            System.out.println("BIO File hash FAILS");
+        }
 
+        //04 - Picture 
+        //Data is not padded
+        //outer wrapping TLV is 76h plus ber-length  
+        imgFile = "76" + Utils.berLength(imgFile.length() / 2) + imgFile;
+        //System.out.println(imgFile);
+        
+        md = MessageDigest.getInstance(algOid.getId());
+        hash = md.digest(Utils.hexStringToByteArray(imgFile));
+        
+        if (Utils.byteArrayToHex(hash).equals(Utils.byteArrayToHex(hashes.get(4)))) {
+            System.out.println("Image hash CHECKS!!!");
+        } else {
+            System.out.println("Image hash FAILS");
+        }
+        
+        //0B - MRZ
+        //Data is not padded
+        //outer wrapping TLV is 76h plus ber-length
+        mrzFile = "6B" + Utils.berLength(mrzFile.length() / 2) + mrzFile;
+        
+        md = MessageDigest.getInstance(algOid.getId());
+        hash = md.digest(Utils.hexStringToByteArray(mrzFile));
+        
+        if (Utils.byteArrayToHex(hash).equals(Utils.byteArrayToHex(hashes.get(11)))) {
+            System.out.println("MRZ hash CHECKS!!!");
+        } else {
+            System.out.println("MRZ hash FAILS");
+        }
+        
+       
+        
         //STEP 3 - Verify Signature
         Store store = s.getCertificates(); 
         SignerInformationStore signers = s.getSignerInfos(); 
@@ -813,24 +878,28 @@ public class SmartcardTests {
         Collection c = signers.getSigners(); 
         Iterator it = c.iterator(); 
         
+        X509Certificate signerCert = null;
         boolean ret = false;
         while (it.hasNext()) { 
             SignerInformation signer = (SignerInformation)it.next(); 
             //2.16.840.1.101.3.4.2.1 - SHA256
-            System.out.println(signer.getDigestAlgOID());
+            //System.out.println(signer.getDigestAlgOID());
             //1.2.840.10045.4.3.2 - ecdsa-with-SHA256
-            System.out.println(signer.getEncryptionAlgOID());
+            //System.out.println(signer.getEncryptionAlgOID());
             
             Collection certCollection = store.getMatches(signer.getSID()); 
             Iterator certIt = certCollection.iterator(); 
 
             X509CertificateHolder certHolder = (X509CertificateHolder)certIt.next(); 
             X509Certificate cert = new JcaX509CertificateConverter().setProvider("BC").getCertificate(certHolder); 
-
+            
             if (signer.verify(new JcaSimpleSignerInfoVerifierBuilder().setProvider("BC").build(cert))) {
                 ret = true; 
+                signerCert = cert;
             }
         }
+        
+        //STEP 4 - Validate Certificate contained in X509Certificate cert.
         
         return ret;
     }

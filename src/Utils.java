@@ -247,4 +247,24 @@ public class Utils {
         array[j+2] = temp;
     }
 
+    /*
+    for input length i, give the BER-LENGTH in Hex String
+    */
+    public static String berLength(int i) {
+        
+        String berLength = byteArrayToHex(intToByteArray(i));
+        if (i > 0xFFFF) {
+            berLength = "84" + berLength;
+        } else if (i > 0x7FFF) {
+            berLength = "83" + berLength;
+        } else if (i > 0xFF) {
+            //if length exceeds 0xFF, 82 trails length and two bytes are used
+            berLength = "82" + berLength;
+        } else if (i > 0x7F) {
+            //if Length exceeds 0x7F (127), 81XX is the length bytes (BER-TLV rules)
+            berLength = "81" + berLength;
+        }
+        return berLength;
+    }
+
 }
