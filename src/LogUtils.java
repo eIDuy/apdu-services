@@ -67,5 +67,17 @@ public class LogUtils {
             
         }
     }
+    
+    public void logCommandName(String command) throws FileNotFoundException, UnsupportedEncodingException {
+        //Log command according to log option
+        if (this.logOption.equals("B")) {
+               
+            //Open file in append mode    
+            PrintWriter pw = new PrintWriter(new FileOutputStream(new File(this.logFile + "apdu_service_" + this.logOption),true));
+            pw.println(command);
+            pw.close();
+            
+        }
+    }
 
 }

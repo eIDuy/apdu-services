@@ -109,7 +109,7 @@ public class Utils {
             iteraciones++;
             if (length - i > 0xFF) {
                 command = new byte[255 + 6]; //le al final
-                command[261] = intToByteArray(le)[0];
+                command[260] = intToByteArray(le)[0];
                 command[0] = (byte) (CLASS | 0x10);
                 command[4] = (byte) 0xFF; // mando el maximo de datos que puedo
                 System.arraycopy(data, i, command, 5, 0xFF);
