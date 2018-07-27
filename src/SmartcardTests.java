@@ -244,6 +244,17 @@ public class SmartcardTests {
                         case 0:
                             break;
                         case 1:
+                            System.out.println("Ingrese ruta y nombre del archivo:");
+                            String ruta = br.readLine();
+                            File initialFile = new File(ruta);
+                            InputStream targetStream = new FileInputStream(initialFile);
+                            byte[] buffer = new byte[targetStream.available()];
+                            targetStream.read(buffer);
+                            String minucia = new String(buffer);
+                            if (verifyFP(channel, minucia)) {
+                                System.out.println("MoC exitoso.\n");
+                            }
+                            else System.out.println("MoC fallido.\n"); 
                             break;
                         case 2:
                             if (verifyFP(channel, minuciav3_1_1)) {
