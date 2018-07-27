@@ -251,6 +251,7 @@ public class SmartcardTests {
                             byte[] buffer = new byte[targetStream.available()];
                             targetStream.read(buffer);
                             String minucia = new String(buffer);
+                            minucia = minucia.replace("\n", "").replace("\r", "");
                             if (verifyFP(channel, minucia)) {
                                 System.out.println("MoC exitoso.\n");
                             }
