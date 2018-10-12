@@ -175,14 +175,10 @@ public class SmartcardTests {
             System.out.println("|  0. Exit                     |");
             System.out.println("|  1. Card authentication PIN  |");
             System.out.println("|  2. Card authentication FP   |");
-            System.out.println("|  3. -                        |");
-            System.out.println("|  4. User identification      |");
-            System.out.println("|  5. -                        |");
-            System.out.println("|  6. -                        |");
-            System.out.println("|  7. Read File                |");
-            System.out.println("|  8. Read Card Certificate    |");
-            System.out.println("|  9. -                        |");
-            System.out.println("| 10. Save EF to file          |");
+            System.out.println("|  3. User identification      |");
+            System.out.println("|  4. Read File                |");
+            System.out.println("|  5. Read Card Certificate    |");
+            System.out.println("|  6. Save EF to file          |");
             System.out.println("============================");
 
             System.out.println("Seleccione una opcion");
@@ -273,10 +269,6 @@ public class SmartcardTests {
                     break;
                     
                 case 3:
-                    System.out.println("Exit");
-                    System.exit(0);
-                    break;
-                case 4:
                     System.out.println("User identification");
 
                     selectIAS(channel);
@@ -318,15 +310,7 @@ public class SmartcardTests {
                     }
 
                     break;
-                case 5:
-                    System.out.println("Exit");
-                    System.exit(0);
-                    break;
-                case 6:
-                    System.out.println("Exit");
-                    System.exit(0);
-                    break;
-                case 7:
+                case 4:
                     System.out.println("Read File");
 
                     System.out.println("Insert File ID");
@@ -337,17 +321,13 @@ public class SmartcardTests {
                     System.out.println(readBinary(channel, fcit.getFileSize()));
 
                     break;
-                case 8:
+                case 5:
                     System.out.println("Read Card Certificate");
                     selectIAS(channel);
                     readCardCertificate(channel);
                     System.exit(0);
                     break;
-                case 9:
-                    System.out.println("Exit");
-                    System.exit(0);
-                    break;
-                case 10:
+                case 6:
                     System.out.println("Test selected");
                     System.out.println("Insert File ID");
                     String id = br.readLine();
