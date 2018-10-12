@@ -335,8 +335,8 @@ public class SmartcardTests {
                     saveEF(channel, id);
                     break;
                 default:
-                    System.out.println("Invalid selection");
-                    System.exit(1);
+                    System.out.println("Invalid selection. Select 0 to Exit.7");
+                    break;
             }
 
         }
