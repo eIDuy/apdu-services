@@ -458,16 +458,16 @@ public class SmartcardTests {
         int largo_minucias = minutiae.length() / 2;
         int largo_value = largo_minucias;
         if (largo_minucias > 0x7F) {
-            dataIN += "81";
-            //Esto es porque dice que es una estructura BER-TLV, y se codifica con el 81 adelante
             largo_value = 3 + largo_value;
             //T(1byte)+L(2byte)+Data
-        } else if (largo_minucias == 0x7F){
-            dataIN += "81";
-            //Esto es porque dice que es una estructura BER-TLV, y se codifica con el 81 adelante
+        } else {
             largo_value = 2 + largo_value;
             //T(1byte)+L(1byte)+Data
-        }  
+        }
+        if (largo_value > 0x7F) {
+            dataIN += "81";
+            //Esto es porque dice que es una estructura BER-TLV, y se codifica con el 81 adelante
+        }
         dataIN += Utils.byteArrayToHex(Utils.intToByteArray(largo_value)); 
         // Length del FP container
 
