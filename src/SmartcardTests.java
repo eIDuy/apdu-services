@@ -58,6 +58,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.util.Store;
 
+
 /**
  *
  * @author gdotta
@@ -91,7 +92,9 @@ public class SmartcardTests {
     private static String HASH_Signature = "";
 
     private static String PIN_ASCII = "";
-    //Test 2
+    
+    private static String swResult = "No definido"; //Resultado de comando APDU
+    
 
     /**
      * @param args the command line arguments
@@ -251,19 +254,20 @@ public class SmartcardTests {
                             if (verifyFP(channel, minucia)) {
                                 System.out.println("MoC exitoso.\n");
                             }
-                            else System.out.println("MoC fallido.\n"); 
+                            else System.out.println("MoC fallido.\nResultado: 0x"+swResult+"\n");
+                            
                             break;
                         case 2:
                             if (verifyFP(channel, minuciav3_1_1)) {
                                 System.out.println("MoC exitoso.\n");
                             }
-                            else System.out.println("MoC fallido.\n"); 
+                            else System.out.println("MoC fallido.\nResultado: 0x"+swResult+"\n"); 
                             break;
                         case 3:
                             if (verifyFP(channel, minucia_3CQ)) {
                                 System.out.println("MoC exitoso.\n");
                             }
-                            else System.out.println("MoC fallido.\n");
+                            else System.out.println("MoC fallido.\nResultado: 0x"+swResult+"\n");
                             break;
                     }
                     break;
@@ -445,33 +449,41 @@ public class SmartcardTests {
 
         String dataIN = "";
         dataIN += "7F2E"; // TAG del TLV para llevar las minucias
-        // en la documentacion de gemalto y de la IAS figura como mandar
-        // estatico el 8180 en el length
-        // pero no funciona si se hace asi.
-        // encontre que funciona si se pone el length como 81XX, donde XX es el
-        // largo de lo que sigue
-        // que si bien es otro TLV, para este es value.
-        // Como el TLV hijo es minucias + length + value, entonces el largo de
-        // este
-        // es largo(minucias) + 2
-        int largo_value = 2 + minutiae.length() / 2;
-        if (largo_value > 0x7F) {
+        // En la documentacion (IAS) figura como mandar
+        // estatico el 8180 en el length, ese caso corresponde cuando la cantidad de minucias es 42.
+        // 
+        // Como el TLV hijo es minucias + length + value, entonces el largo de este es:
+        // L= largo(minucias) + 2 si data = 0x80 (128) = 42 minucias
+        // L= largo(minucias) + 3 si data > 0x80 (T+L = 81 81 XX)
+        int largo_minucias = minutiae.length() / 2;
+        int largo_value = largo_minucias;
+        if (largo_minucias > 0x7F) {
             dataIN += "81";
             //Esto es porque dice que es una estructura BER-TLV, y se codifica con el 81 adelante
-        }
-        dataIN += Utils.byteArrayToHex(Utils.intToByteArray(largo_value)); // Length
-        // del
-        // FP
-        // container
+            largo_value = 3 + largo_value;
+            //T(1byte)+L(2byte)+Data
+        } else if (largo_minucias == 0x7F){
+            dataIN += "81";
+            //Esto es porque dice que es una estructura BER-TLV, y se codifica con el 81 adelante
+            largo_value = 2 + largo_value;
+            //T(1byte)+L(1byte)+Data
+        }  
+        dataIN += Utils.byteArrayToHex(Utils.intToByteArray(largo_value)); 
+        // Length del FP container
 
         // 81 aca es el tag del proximo TLV, y el length es el largo de las
-        // minucias, que es el value
-        // hay un ejemplo confuso en la documentacion, que pone como que habria
-        // que poner el length
-        // como 81XX igual que en el TLV padre, pero esto no es asi. Se pone el
-        // length normal
-        dataIN += "81"
-                + Utils.byteArrayToHex(Utils.intToByteArray(minutiae.length() / 2));
+        // minucias, que es el value.
+        // Hay un ejemplo confuso en la documentacion, que dice como que habria
+        // que poner el length como 81XX, pero esto no siempre es asi. 
+        // Se pone el length normal
+        dataIN += "81";
+        
+        if (largo_minucias > 0x7F) {
+            dataIN += "81";
+            //Esto es porque dice que es una estructura BER-TLV, y se codifica con el 81 adelante
+ 
+        }
+        dataIN += Utils.byteArrayToHex(Utils.intToByteArray(largo_minucias));
         
         //hay que ordenar las minucias explicitamente
         byte[] bMinutiae = Utils.hexStringToByteArray(minutiae);
@@ -485,6 +497,7 @@ public class SmartcardTests {
         LogUtils logUtils = LogUtils.getInstance();
         logUtils.logCommandName("VERIFY_FINGERPRINT");
         ResponseAPDU r = Utils.sendCommand(channel, CLASSbyte, INSbyte, P1byte, P2byte, Utils.hexStringToByteArray(dataIN),0);
+        swResult = Utils.byteArrayToHex(r.getBytes());
         return (r.getSW1() == (int) 0x90 && r.getSW2() == (int) 0x00);
 
         // El SW 6A80 indica error de codificacion, es decir, en los TLV
@@ -503,7 +516,7 @@ public class SmartcardTests {
         // por lo que el DATA tiene que ser siempre de 12 bytes.
         // se pone con padding de ceros para completar 12.
         // Los caracteres van codificados en ascii, hay que ver si se hace
-        // enforcement de eso
+        // enforcement de eso 
         byte CLASSbyte = Utils.hexStringToByteArray(CLASS)[0];
         byte INSbyte = Utils.hexStringToByteArray(INSTRUCTION)[0];
         byte P1byte = Utils.hexStringToByteArray(PARAM1)[0];
@@ -515,6 +528,7 @@ public class SmartcardTests {
 
         // El SW 6A80 indica error de codificacion, es decir, en los TLV
         // El SW 63Cx indica error de match y que quedan x intentos
+        // El SW 6984 indica que se encuentra bloqueado por cantidad de intentos erroneos
         // 9000 es SW de exito
     }
 
